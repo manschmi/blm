@@ -29,12 +29,12 @@ NULL
 #' 
 #' @return An object of class \code{mv_dist} containing a "means": vector of 
 #' means and "covar": the covariance matrix.
-make_prior <- function(mu, alpha, dim){
+make_prior <- function(mean, alpha, dim){
   covar <- diag(1/alpha, dim, dim)
-  if (length(mu) != dim) {
-    mu_vec <- rep(mu,dim)[1:dim]
+  if (length(mean) != dim) {
+    mean_vec <- rep(mean,dim)[1:dim]
   }
-  mv_dist(mu_vec, covar)
+  mv_dist(mean_vec, covar)
 }
 
 
@@ -45,12 +45,14 @@ make_prior <- function(mu, alpha, dim){
 #'  
 #'  @param formula Object of class "formula": a symbolic description of the 
 #'    model to be fitted.
-#'  @param prior The prior distribution, either a mv_dist or a blm object.
+#'  @param prior The prior distribution, either a \code{mv_dist} or a \code{blm}   object.
+#'  @param beta Precision of the model fit.
+#'  @param use_data_from_prior logical. If \code{TRUE} response and explanatory variables are extracted from the "prior". The prior needs to be provided as model object, ie \code{blm}.
 #'  @param ... Additional arguments, or arguments with changed values
 #'  
 #'  @export
 blm <- function(formula, prior = NULL, beta = 1, ...) {
-    
+  
   frame <- model.frame(as.formula(formula), ...)
   matrix <- model.matrix(as.formula(formula), frame)
   mod_vars <- colnames(matrix)
@@ -64,9 +66,9 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
   prior <- distribution(prior)
 
   prior_vars <- mv_dist.var_names(prior)
-  if ( all(mod_vars %in% prior_vars) ) {
+  if ( !all(prior_vars %in% mod_vars) ) {
     #can occur ie when updating to a new formula with fewer terms
-    if ( mod_vars %in% prior_vars ){
+    if ( all(mod_vars %in% prior_vars) ){
       warning('prior contains more variables than the model : variables not used in the model are ignored in the fit')
       prior <- subset(prior, colnames(matrix))
     } else {
@@ -74,16 +76,12 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
       stop(paste('model formula contains variable names not provided in the prior', missing ))
     }
   }
-  
-  print(prior)
 
   prior_covar <- mv_dist.covar(prior)
   
   response <- model.response(frame)
   
   lhd_term <- beta * t(matrix) %*% matrix
-  
-  print(lhd_term)
   
   covar <- solve(prior_covar + lhd_term)
   
@@ -105,15 +103,21 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
 
 #' Update a blm distribution
 #' @export
-update.blm <- function(model, formula = model$formula, prior=model, beta, ...) {
-    
-  if ( (formula != model$formula)  &  (prior == model) ) {
-    #to do -> trim prior to fit formula
+update.blm <- function(model, formula = model$formula, ...) {
+  if ( !missing(formula) & (formula != model$formula) ) {
+    #updating to new formula
+    new_mod <- blm(formula=formula, 
+                   beta = model$beta,
+                   prior = model$prior,
+                   data = model$frame,
+                   ...)
+  } else {
+    #use model as prior
+    new_mod <- blm(formula=formula, prior=model, ...)
   }
   
-  blm(formula, prior, beta, ...)
-
-  }
+  new_mod
+}
 
 
 #' Coefficients
@@ -188,23 +192,23 @@ covar.blm <- function(object, ...){
 #' @export 
 confint.blm <- function (object, 
                          param, 
-                         level = .05, ...) {
+                         level = .95, ...) {
 
   if (missing(param)) {
-    param <- seq_along(cf)
+    param <- seq_along(coef(object))
   }
   
   cf <- coef(object)[param]
-  cf_var <- diag(cov.blm(object))[param]
+  cf_var <- diag(covar.blm(object))[param]
   
-  l <- level/2
+  l <- (1-level)/2
   lower <- qnorm(l, cf, sqrt(cf_var))
   upper <- qnorm((1-l), cf, sqrt(cf_var))
   
   matrix(c(lower, upper),
-         ncol=2,
+         nrow=length(lower),
          dimnames=list(names(cf),
-                      paste(100 * c(l,1-l), '%')))
+                      paste(100*c(l,1-l), '%')))
 }
 
 
@@ -226,20 +230,52 @@ confint.blm <- function (object,
 #'  
 #' @export
 predict.blm <- function(object, newdata = NULL, report.var = F, ...){
-  responseless_formula <- delete.response(terms(object$formula))
   
   if ( missing(newdata) ) {
-    matrix <- model.matrix(responseless_formula, object$frame)    
-  } else {
-    frame <- model.frame(responseless_formula, newdata)
-    matrix <- model.matrix(responseless_formula, frame)
+    return( fitted(object, report.var=report.var, ...) )   
   }
+  
+  responseless_formula <- delete.response(terms(object$formula))
+  frame <- model.frame(responseless_formula, newdata)
+  matrix <- model.matrix(responseless_formula, frame)
   
   means <- apply(matrix, 1, function(xi) sum(coef(object) * xi))
   
   if (report.var) {
     vars <- apply(matrix, 1, function(xi) 
                     1/object$beta +  t(xi) %*% cov.blm(object) %*% xi)
+    
+    return(list(mean = means, var = vars))
+  }
+  
+  means
+}
+
+
+
+#' Extract Model Fitted Values 
+#' 
+#' Extracts the fitted values for the response variable of a \code{\link{blm}}
+#'  object.
+#'  
+#' @param object a \code{blm} object.
+#' @param report.var Report also variance for the predicted values.
+#'
+#' @return A vector of predicted values. If report.var = TRUE, a list containing
+#'  means and variances of the predicted values. Identical to \code{predict.blm}
+#'  without newdata.
+#'  
+#' @export
+fitted.blm <- function(object, report.var = F, ...){
+  
+  responseless_formula <- delete.response(terms(object$formula))
+  matrix <- model.matrix(responseless_formula, object$frame)    
+  
+  means <- apply(matrix, 1, function(xi) sum(coef(object) * xi))
+  
+  if (report.var) {
+    vars <- apply(matrix, 1, function(xi) 
+      1/object$beta +  t(xi) %*% cov.blm(object) %*% xi)
     
     return(list(mean = means, var = vars))
   }

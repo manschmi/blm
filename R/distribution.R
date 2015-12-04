@@ -58,7 +58,7 @@ mv_dist.var_names <- function(d, ...){
 mv_dist.set_var_names <- function(d, var_names, ...){
   names(d$means) <- var_names
   colnames(d$covar) <- var_names
-  rownames(d$var) <- var_names
+  rownames(d$covar) <- var_names
   d
 }
 
