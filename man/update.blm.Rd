@@ -4,7 +4,7 @@
 \alias{update.blm}
 \title{Update a blm distribution}
 \usage{
-\method{update}{blm}(model, prior, beta, ...)
+\method{update}{blm}(model, formula = model$formula, ...)
 }
 \description{
 Update a blm distribution

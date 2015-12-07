@@ -4,7 +4,7 @@
 \alias{confint.blm}
 \title{Confidence Interval for Coefficients of a Bayesian Linear Model}
 \usage{
-\method{confint}{blm}(object, param, level = 0.05, ...)
+\method{confint}{blm}(object, param, level = 0.95, ...)
 }
 \arguments{
 \item{object}{a \code{blm} object.}

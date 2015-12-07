@@ -17,7 +17,9 @@ Computes a bayesian linear regression fit. It only works for
  
  @param formula Object of class "formula": a symbolic description of the 
    model to be fitted.
- @param prior The prior distribution, either a mv_dist or a blm object.
+ @param prior The prior distribution, either a \code{mv_dist} or a \code{blm}   object.
+ @param beta Precision of the model fit.
+ @param use_data_from_prior logical. If \code{TRUE} response and explanatory variables are extracted from the "prior". The prior needs to be provided as model object, ie \code{blm}.
  @param ... Additional arguments, or arguments with changed values
  
  @export

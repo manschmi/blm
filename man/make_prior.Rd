@@ -4,7 +4,7 @@
 \alias{make_prior}
 \title{Prior distribution}
 \usage{
-make_prior(mu, alpha, dim)
+make_prior(mean, alpha, dim)
 }
 \value{
 An object of class \code{mv_dist} containing a "means": vector of 
