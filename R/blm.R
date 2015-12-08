@@ -74,7 +74,8 @@ make_prior <- function(mean, alpha, dim=length(mean)){
 #'   are set to 0 and the variances to 1.
 #'   
 #' @return A object of class \code{blm}. An object of class "lm" is a list 
-#'   containing at least the following components: \describe{ \item{call}{the
+#'   containing at least the following components: 
+#'   \describe{ \item{call}{the
 #'   matched call} \item{formula}{the formula used} \item{frame}{the model frame
 #'   used} \item{matrix}{the model matrix used} \item{beta}{the precision of the
 #'   data} \item{prior}{the prior distribution used} \item{posterior}{the
@@ -499,37 +500,80 @@ summary.blm <- function(object, ...){
 #' 
 #' @param object a blm object.
 #' @param explanatory a single number or vector for explanatory variables the 
-#'  response will be plotted against.
-#' @param se_level single or vector of level(s) for fitted values to be shown.
-#'  
+#'   response will be plotted against.
+#' @param data list or data frame containg points to display. Must contain
+#'   entries named 'x' and 'y'.
+#' @param se display variance of blm fit?
+#' @param level single or vector of level(s) for fit variance to be shown.
+#' @param show_lm display the regular lm fit on the plot?
+#' @param expand_fit add fit lines to the limits of the plot?
+#'   
 #' @examples
 #' x <- rnorm(100)
 #' b <- 1.3
 #' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
 #' 
-#' ##need to do more in case of complex model that does not contain a term 'x'
 #' y <- rnorm(100, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b))
-#' model <- blm(y ~ x + sin(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+#' model <- blm(y ~ x + sin(x), prior = NULL, beta = b, 
+#'                data = data.frame(x=x, y=y))
 #' 
 #' plot(model, xlim=c(-10,10))
 #' 
+#' 
 #' ##need to do more in case of complex model that does not contain a term 'x'
 #' y <- rnorm(100, mean = w0 + w1 * cos(x) + w2 *sin(x), sd = sqrt(1/b))
-#' model <- blm(y ~ cos(x) + sin(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+#' model <- blm(y ~ cos(x) + sin(x), prior = NULL, beta = b, 
+#'              data = data.frame(x=x, y=y))
 #' 
-#' plot(model, points=data.frame(x=x, y=y), xlim=c(-10,10))
+#' \dontrun{
+#' #does not know what to plot when explanatory not part of model frame (ie here
+#' only 'cos(x)' and 'sin(x)' but not 'x' is present. 
+#' plot(model, xlim=c(-10,10))
+#' }
+#' #can be fixed by providing the points
+#' plot(model, data=data.frame(x=x, y=y), xlim=c(-10,10))
+#' 
+#' 
+#' #response and explanatory names do not matter
+#' z_not_x <- rnorm(100)
+#' b <- 1.3
+#' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
+#' 
+#' v_not_y <- rnorm(100, mean = w0 + w1 * z_not_x + w2 *sin(z_not_x), sd = sqrt(1/b))
+#' model <- blm(v_not_y ~ z_not_x + sin(z_not_x), prior = NULL, beta = b, 
+#'                data = data.frame(z_not_x=z_not_x, v_not_y=v_not_y))
+#' 
+#' plot(model)
+#' 
+#' 
+#' #dealing with multiple explanatory variables
+#' x <- rnorm(100)
+#' z <- rnorm(100)
+#' b <- 1.3
+#' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
+#' 
+#' y <- rnorm(100, mean = w0 + w1 * x + w2 * z, sd = sqrt(1/b))
+#' model <- blm(y ~ x + z, prior = NULL, beta = b, 
+#'                data = data.frame(y=y, x=x, z=z))
+#' 
+#' \dontrun{
+#'  #not functional at the moment
+#'  plot(model, data = data.frame(y=y, x=x, z=z))
+#' }
+#' 
+#' 
 #' 
 #' @export
 plot.blm <- function(object, explanatory = 1, se_level = .95, 
-                     points=NULL, ...){
+                     data=NULL, show_lm=TRUE, expand_fit=TRUE, ...){
   
   frame <- object[['frame']]
   
-  if ( !missing(points)) {
+  if ( !missing(data)) {
     x_lab <- 'x'
-    x <- points[,'x']
+    x <- data[,'x']
     response_lab <- 'y'
-    response <- points[,'y']
+    response <- data[,'y']
   } else {
     x_lab <- labels(terms(frame))[explanatory]
     x <- frame[,x_lab]
@@ -541,15 +585,26 @@ plot.blm <- function(object, explanatory = 1, se_level = .95,
          xlab = x_lab, ylab = response_lab, ...)
     
     
-    plot_lims <- par('usr')[1:2]
-    x_fit <- seq(plot_lims[1], plot_lims[2], length.out=1000)
+    if ( expand_fit ) {
+      plot_lims <- par('usr')[1:2]
+      x_fit <- seq(plot_lims[1], plot_lims[2], length.out=1000)
+      data <- data.frame(x=x_fit)
+      colnames(data)[1] <- x_lab
+    } else {
+      x_order <- order(object$frame[,x_lab])
+      x_fit <- object$frame[x_order,x_lab]
+      data <- object$frame[x_order,]
+    }
+  
+    if ( show_lm ) {
+      #add lm fit
+      y_lm <- predict(lm(object$formula, object$frame), data)
+      lines(y_lm~x_fit, col='red', lty=2)
+    } 
     
-    #add lm fit
-    y_lm <- predict(lm(object$formula, object$frame), data.frame(x=x_fit))
-    lines(y_lm~x_fit, col='red', lty=2)
     
     #add blm fit
-    y_blm <- predict(object, data.frame(x=x_fit), report.var=T)
+    y_blm <- predict(object, data, report.var=T)
     y_blm_map <- y_blm$mean
     upper <- qnorm(level, mean = y_blm$mean, sd = sqrt(y_blm$var))
     lower <- qnorm(1-level, mean = y_blm$mean, sd = sqrt(y_blm$var))
