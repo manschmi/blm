@@ -4,6 +4,7 @@
 #' 
 #' @param means vector of means of the variables
 #' @param covar covariance matrix of the variables
+#' @param var_names optional names of the variables
 #' @param ... currently ignored
 #'   
 #' @return An object of class \code{distribution} containing: 
@@ -16,10 +17,19 @@
 #' mv_dist(c(0,1),matrix(c(2,3,3,2),ncol=2))
 #' 
 #' @export
-mv_dist <- function(means, covar){
+mv_dist <- function(means, covar, var_names){
+  
+  if ( !missing(var_names) ) {
+    names(means) <- var_names
+    colnames(covar) <- var_names
+    rownames(covar) <- var_names
+  }
+  
   structure(list(means = drop(means), 
                  covar = drop(covar)),
             class = 'mv_dist')
+  
+  
 }
 
 
@@ -71,7 +81,14 @@ mv_dist.set_var_names <- function(d, var_names, ...){
 #' Return ubset of variables of a multivariate normal distribution object of 
 #'  class \code{mv_dist}.
 #' 
-#' @param object 
+#' @param object an object of class \code{mv_dist}
+#' @param subset names or indices of variables to extract from mv_dist
+#' 
+#' @examples
+#' d <- mv_dist(c(0,1),matrix(c(2,3,3,2),ncol=2), c('a', 'b'))
+#' subset.mv_dist(d, 1)
+#' subset.mv_dist(d, 'b')
+#' 
 subset.mv_dist <- function(object, subset, ...){
   object$means <- object$means[subset]
   object$covar <- object$covar[subset,subset]
