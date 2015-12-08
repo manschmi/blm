@@ -1,11 +1,14 @@
 Package: blm
 Type: Package
-Title: What the package does (short line)
-Version: 1.0
+Title: Bayesian Linear Regression
+Version: 0.0.1
 Date: 2015-11-26
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Authors@R: person("Manfred", "Schmid",
+  email = "ms@mbg.au.dk",
+  role = c("aut", "cre"))
+Description: Package for bayesian linear regression. Can fit experimental data, 
+  extract coefficients, predict for unkown explanatory variables and plot data 
+  and model.
+License: GPL-2
 RoxygenNote: 5.0.1
 Suggests: testthat

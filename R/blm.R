@@ -1,7 +1,7 @@
 #' blm: A package for bayesian linear regression.
 #'
 #' The \code{blm} package is for construction and analysis of bayesian linear
-#'  regression models.
+#' regression models.
 #' 
 #' 
 #' @section blm functions:
@@ -18,7 +18,6 @@
 #' plot.blm
 #' 
 #' 
-#'
 #' @docType package
 #' @name blm
 #' 
@@ -33,21 +32,22 @@ NULL
 #' @param mean mean or a vector of the mean(s) of the distribution.
 #' @param alpha single value or vector for precision(s) of the distribution.
 #' @param dim number of variables for the distribution.
-
-#' 
+#'   
 #' @details Creates a multivariate normal distribution object of class 
-#'  \code{\link{mv_dist}} that holds \code{means} and \code{covar} of a 
-#'  multivariate normal distribution. If number of means of covars is less than
-#'  \code{dim}, the values provided are expanded to fill the multivariate
-#'  distribution.
-#' 
-#' @return An object of class \code{mv_dist} with provided means and covariances computed as 1/\code{alpha}.
-#'  
-#' @example
+#'   \code{\link{mv_dist}} that holds \code{means} and covariance \code{covar} 
+#'   of a multivariate normal distribution. If number of means or covars is less
+#'   than \code{dim}, the values provided are expanded to fill the multivariate 
+#'   distribution.
+#'   
+#' @return An object of class \code{mv_dist} with provided means and covariances
+#'   computed as 1/\code{alpha}.
+#'   
+#' @examples
 #'  make_prior(0,1,2)
 #'  
 #'  make_prior(c(0,1),c(1,2))
 #'  
+#' @export
 make_prior <- function(mean, alpha, dim=length(mean)){
   covar <- diag(1/alpha, dim, dim)
   if (length(mean) != dim) {
@@ -59,28 +59,28 @@ make_prior <- function(mean, alpha, dim=length(mean)){
 
 #' Bayesian Linear Regression
 #' 
-#' Computes a bayesian linear regression fit. The current implementation requires knowledge about the precision \code{beta} of the observations.
-#'  
-#'  @param formula an object of class "formula": a symbolic description of the 
-#'    model to be fitted.
-#'  @param prior the prior distribution, either a \code{mv_dist} or a \code{blm}   object.
-#'  @param beta the precision of the data used for the model.
-#'  @param ... Additional arguments and values.
-#'  
-#'  @details Models for \code{blm} are provided as for \code{\link{lm}}. If prior distribution \code{prior} of the wieghts is not provided the prior means are set to 0 and the variances to 1.
-#'  
-#'  @return A object of class \code{blm}.
-#'  An object of class "lm" is a list containing at least the following components:
-#'  \describe{
-#'   \item{call}{the matched call}
-#'   \item{formula}{the formula used}
-#'   \item{frame}{the model frame used}
-#'   \item{matrix}{the model matrix used}
-#'   \item{beta}{the precision of the data}
-#'   \item{prior}{the prior distribution used}
-#'   \item{posterior}{the posterior distribution}
-#'  
-#'  @example
+#' Computes a bayesian linear regression fit. The current implementation 
+#' requires knowledge about the precision \code{beta} of the observations.
+#' 
+#' @param formula an object of class "formula": a symbolic description of the 
+#'   model to be fitted.
+#' @param prior the prior distribution, either a \code{mv_dist} or a \code{blm} 
+#'   object.
+#' @param beta the precision of the data used for the model.
+#' @param ... Additional arguments and values.
+#'   
+#' @details Models for \code{blm} are provided as for \code{\link{lm}}. If prior
+#'   distribution \code{prior} of the wieghts is not provided the prior means 
+#'   are set to 0 and the variances to 1.
+#'   
+#' @return A object of class \code{blm}. An object of class "lm" is a list 
+#'   containing at least the following components: \describe{ \item{call}{the
+#'   matched call} \item{formula}{the formula used} \item{frame}{the model frame
+#'   used} \item{matrix}{the model matrix used} \item{beta}{the precision of the
+#'   data} \item{prior}{the prior distribution used} \item{posterior}{the
+#'   posterior distribution}
+#'   
+#' @examples
 #'  
 #'    w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
 #'    x <- rnorm(50)
@@ -101,7 +101,7 @@ make_prior <- function(mean, alpha, dim=length(mean)){
 #'    y <- rnorm(50, w2 * z + w1 * x + w0, 1/b)
 #'    blm(y~x+z, beta=b, data=data.frame(x=x, y=y, z=z))
 #'  
-#'  @export
+#' @export
 blm <- function(formula, prior = NULL, beta = 1, ...) {
   
   frame <- model.frame(as.formula(formula), ...)
@@ -168,7 +168,7 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
 #' 
 #' @return A object of class \code{blm}.
 #' 
-#' @example
+#' @examples
 #'    w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
 #'    x <- rnorm(50)
 #'    y <- rnorm(50, w1 * x + w0, 1/b)
@@ -193,7 +193,7 @@ update.blm <- function(object,
                        data = object$frame, 
                        ...) {
   
-  blm(formula=formula, prior=model, beta=beta, data=data, ...)
+  blm(formula=formula, prior=object, beta=beta, data=data, ...)
   
 }
 
@@ -346,7 +346,7 @@ predict.blm <- function(object, newdata = NULL, report.var = FALSE, ...){
   
   if (report.var) {
     vars <- apply(matrix, 1, function(xi) 
-                    1/object$beta +  t(xi) %*% cov.blm(object) %*% xi)
+                    1/object$beta +  t(xi) %*% covar.blm(object) %*% xi)
     
     return(list(mean = means, var = vars))
   }
@@ -387,7 +387,7 @@ fitted.blm <- function(object, report.var = FALSE, ...){
   
   if (report.var) {
     vars <- apply(matrix, 1, function(xi) 
-      1/object$beta +  t(xi) %*% cov.blm(object) %*% xi)
+      1/object$beta +  t(xi) %*% covar.blm(object) %*% xi)
     
     return(list(mean = means, var = vars))
   }
@@ -500,30 +500,61 @@ summary.blm <- function(object, ...){
 #' @param object a blm object.
 #' @param explanatory a single number or vector for explanatory variables the 
 #'  response will be plotted against.
+#' @param se_level single or vector of level(s) for fitted values to be shown.
+#'  
+#' @examples
+#' x <- rnorm(100)
+#' b <- 1.3
+#' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
+#' 
+#' ##need to do more in case of complex model that does not contain a term 'x'
+#' y <- rnorm(100, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b))
+#' model <- blm(y ~ x + sin(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+#' 
+#' plot(model, xlim=c(-10,10))
+#' 
+#' ##need to do more in case of complex model that does not contain a term 'x'
+#' y <- rnorm(100, mean = w0 + w1 * cos(x) + w2 *sin(x), sd = sqrt(1/b))
+#' model <- blm(y ~ cos(x) + sin(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+#' 
+#' plot(model, points=data.frame(x=x, y=y), xlim=c(-10,10))
 #' 
 #' @export
-plot.blm <- function(object, explanatory = 1, ...){
+plot.blm <- function(object, explanatory = 1, se_level = .95, 
+                     points=NULL, ...){
   
   frame <- object[['frame']]
-  for (exp in explanatory) {
-    x_lab <- labels(terms(frame))[exp]
+  
+  if ( !missing(points)) {
+    x_lab <- 'x'
+    x <- points[,'x']
+    response_lab <- 'y'
+    response <- points[,'y']
+  } else {
+    x_lab <- labels(terms(frame))[explanatory]
     x <- frame[,x_lab]
-    
-    response_lab <- attr(terms(frame), 'response')
+    response_lab <- colnames(frame)[attr(terms(frame), 'response')]
     response <- model.response(frame)
-    
-    plot(x, response, type = "p", 
-         xlab = x_lab, ylab = response_lab, ...)
-    abline(lm(y~x), col = 'red') #regular lm fit
-    abline(model, col='blue') #blm fit
-    
-    #ugly hack to get the 'se' of the fit plotted as line
-    x_order <- order(frame[,x_lab])
-    y_fit <- predict(object, report.var=T)
-    upper <- qnorm(.95, mean = y_fit$mean, sd = sqrt(y_fit$var))
-    lower <- qnorm(.05, mean = y_fit$mean, sd = sqrt(y_fit$var))
-    lines(lower[x_order]~x[x_order], col='blue', lty=2)
-    lines(upper[x_order]~x[x_order], col='blue', lty=2)
   }
+  
+    plot(x, response, type = "p", pch=19,
+         xlab = x_lab, ylab = response_lab, ...)
+    
+    
+    plot_lims <- par('usr')[1:2]
+    x_fit <- seq(plot_lims[1], plot_lims[2], length.out=1000)
+    
+    #add lm fit
+    y_lm <- predict(lm(object$formula, object$frame), data.frame(x=x_fit))
+    lines(y_lm~x_fit, col='red', lty=2)
+    
+    #add blm fit
+    y_blm <- predict(object, data.frame(x=x_fit), report.var=T)
+    y_blm_map <- y_blm$mean
+    upper <- qnorm(level, mean = y_blm$mean, sd = sqrt(y_blm$var))
+    lower <- qnorm(1-level, mean = y_blm$mean, sd = sqrt(y_blm$var))
+    lines(y_blm_map~x_fit, col='blue', lty=1)
+    lines(lower~x_fit, col='blue', lty=2)
+    lines(upper~x_fit, col='blue', lty=2) 
   
 }

@@ -1,7 +1,4 @@
-context("Testing constructor, update and predict")
-
-seed <- as.integer(1000 * rnorm(1))
-
+context("Testing constructing blm, update etc on a range of formulas")
 
 #checks expect_equal for coefficients and covariance of the coefficients of 2 blm models
 compare_blm <- function(model1, model2) {
@@ -45,8 +42,8 @@ check_blm_getter_funs <- function(model) {
 }
 
 
-
-test_that(paste("Evaluates construction of simple blm with intercept using", seed), {
+seed <- as.integer(1000 * rnorm(1))
+test_that(paste("Evaluates construction of simple blm with intercept using seed", seed), {
   w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
   x <- rnorm(50)
   y <- rnorm(50, w1 * x + w0, 1/b)
@@ -64,7 +61,7 @@ test_that(paste("Evaluates construction of simple blm with intercept using", see
 
 
 seed <- as.integer(1000 * rnorm(1))
-test_that(paste("Evaluates construction and updating of simple blm with intercept using", seed), {
+test_that(paste("Evaluates construction and updating of simple blm with intercept  using seed", seed), {
   w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
   x <- rnorm(50)
   y <- rnorm(50, w1 * x + w0, 1/b)
@@ -77,7 +74,7 @@ test_that(paste("Evaluates construction and updating of simple blm with intercep
   mod_new <- blm(y~x, prior=mod, beta=b, 
                  data=data.frame(x=x_new, y=y_new))
   
-  mod_new2 <- update.blm(mod, data=data.frame(x=x_new, y=y_new))
+  mod_new2 <- update(mod, data=data.frame(x=x_new, y=y_new))
   
   compare_blm(mod_new, mod_new2)
   
@@ -112,7 +109,7 @@ test_that("Evaluates construction and updating of simple blm with intercept to m
 
 
 seed <- as.integer(1000 * rnorm(1))
-test_that(paste("Evaluates construction of polynomial models", seed), {
+test_that(paste("Evaluates construction of polynomial models using seed", seed), {
   w0 <- 0.3 ; w1 <- 1.1 ; w2 <- 3.3 ; b <- 1.3
   x <- rnorm(50)
   y <- rnorm(50, w2 * x^2 + w1 * x + w0, 1/b)
