@@ -12,6 +12,9 @@
 #'    \item{covar}{covariance matrix}
 #' } 
 #' 
+#' @examples
+#' mv_dist(c(0,1),matrix(c(2,3,3,2),ncol=2))
+#' 
 #' @export
 mv_dist <- function(means, covar){
   structure(list(means = drop(means), 
