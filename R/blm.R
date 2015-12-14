@@ -568,9 +568,11 @@ summary.blm <- function(object, ...){
 #' model <- blm(y ~ cos(x), prior = NULL, beta = b, 
 #'              data = data.frame(x=x, y=y))
 #' 
+#' \dontrun{
 #' #plots y~cos(x) on the x-axis and this does probably not produce the plot we
 #' want.
 #' plot(model, xlim=c(-10,10))
+#' }
 #'
 #' #we can specify that we want 'x' and not 'cos(x)' by providing the name of
 #' the explanatory and we get the correct results
@@ -621,9 +623,9 @@ plot.blm <- function(x, explanatory = NULL,
     data <- data.frame(x=x_fit)
     colnames(data)[1] <- explanatory
   } else {
-    x_order <- order(object$frame[,explanatory])
-    x_fit <- object$frame[x_order,explanatory]
-    data <- object$frame[x_order,]
+    x_order <- order(frame[,explanatory])
+    x_fit <- frame[x_order,explanatory]
+    data <- frame[x_order,]
   }
   
   if ( show_lm ) {

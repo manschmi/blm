@@ -64,9 +64,11 @@ y <- rnorm(100, mean = w0 + w1 * cos(x), sd = sqrt(1/b))
 model <- blm(y ~ cos(x), prior = NULL, beta = b, 
              data = data.frame(x=x, y=y))
 
+\dontrun{
 #plots y~cos(x) on the x-axis and this does probably not produce the plot we
 want.
 plot(model, xlim=c(-10,10))
+}
 
 #we can specify that we want 'x' and not 'cos(x)' by providing the name of
 the explanatory and we get the correct results
