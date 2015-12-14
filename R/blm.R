@@ -261,7 +261,7 @@ covar.blm <- function(object, ...){
 #' Compute the confidence interval \code{\link{deviance}} for a bayesian linear
 #'  model.
 #'  
-#' @param object a \code{blm} object.
+#' @param x a \code{blm} object.
 #' @param param parameter for which confidence interval should be computed. Either a number or vector of numbers. If missig all parameters are considered.
 #' @param level confidence level
 #'
@@ -283,16 +283,16 @@ covar.blm <- function(object, ...){
 #' confint(model, c(1,2))
 #' 
 #' @export 
-confint.blm <- function (object, 
+confint.blm <- function (x, 
                          param, 
                          level = .95, ...) {
   
   if (missing(param)) {
-    param <- seq_along(coef(object))
+    param <- seq_along(coef(x))
   }
   
-  cf <- coef(object)[param]
-  cf_var <- diag(covar.blm(object))[param]
+  cf <- coef(x)[param]
+  cf_var <- diag(covar.blm(x))[param]
   
   l <- (1-level)/2
   lower <- qnorm(l, cf, sqrt(cf_var))
@@ -466,12 +466,12 @@ deviance.blm <- function(object, ...){
 #' 
 #' Print a blm object
 #' @export
-print.blm <- function(object, ...){
+print.blm <- function(x, ...){
   cat('Call:\n')
-  print(object$call)
+  print(x$call)
   cat('\n')
   cat('Coefficients:\n')
-  print(coef(object))
+  print(coef(x))
 }
 
 
@@ -498,7 +498,7 @@ summary.blm <- function(object, ...){
 #' 
 #' Plots the blm object along with the MAP fit line and quantiles for the fit.
 #' 
-#' @param object a blm object.
+#' @param x a blm object.
 #' @param explanatory name of the explanatory variable to be plotted on the x
 #'   axis.
 #' @param se display variance of blm fit?
@@ -509,10 +509,16 @@ summary.blm <- function(object, ...){
 #' @param fit_legend_param parameters for the fit legend?
 #' @param xlab label for the x axis.
 #' @param ylab label for the y axis.
-#'
-#' @details Plots the data points used to create the \code{\link{blm}} object, together with the blm fit, 95% quanitle of the blm fit and the (frequentist) lm fit.
-#' \code{explanatory} can be used to specify what parameter is to be plotted on the x axis. This can be useful ie when plotting models with a 'pure' explanatory ie y~sin(x); where 'x' is not part of the model. Providing \code{explanatory = 'x'} will produce the correct output for such models.
-#' \code{data} can be used to display additional data points on the plot. The data used to create the model will always be shown.
+#' 
+#' @details Plots the data points used to create the \code{\link{blm}} object,
+#'   together with the blm fit, 95% quanitle of the blm fit and the
+#'   (frequentist) lm fit. \code{explanatory} can be used to specify what
+#'   parameter is to be plotted on the x axis. This can be useful ie when
+#'   plotting models with a 'pure' explanatory ie y~sin(x); where 'x' is not
+#'   part of the model. Providing \code{explanatory = 'x'} will produce the
+#'   correct output for such models. \code{data} can be used to display
+#'   additional data points on the plot. The data used to create the model will
+#'   always be shown.
 #' 
 #' @examples
 #' x <- rnorm(100)
@@ -552,11 +558,13 @@ summary.blm <- function(object, ...){
 #' 
 #' 
 #' @export
-plot.blm <- function(object, explanatory = NULL, 
+plot.blm <- function(x, explanatory = NULL, 
                      se=TRUE, se_level = .95, 
                      data=NULL, show_lm=TRUE, expand_fit=TRUE, 
                      show_fit_legend=TRUE, fit_legend_param=NULL,
                      xlab, ylab, ...){
+  
+  object <- x #want to keep argument name x to be consistent with generic fun
   
   if ( missing(explanatory)) {
     #take the first term of the formula per default
@@ -622,7 +630,9 @@ plot.blm <- function(object, explanatory = NULL,
       }
       if (se) {
         fit_legend_param[['legend']] <- c(fit_legend_param[['legend']],
-                                          paste(100*se_level, '% quantile'))
+                                          paste(c('blm', 
+                                                  100*se_level, 
+                                                  '% quantile'), collapse=' '))
       }
     }
     if (is.null(fit_legend_param[['lty']])) {
