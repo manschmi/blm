@@ -4,7 +4,7 @@
 \alias{mv_dist}
 \title{Multivariate distribution}
 \usage{
-mv_dist(means, covar, var_names)
+mv_dist(means, covar, var_names, ...)
 }
 \arguments{
 \item{means}{vector of means of the variables}

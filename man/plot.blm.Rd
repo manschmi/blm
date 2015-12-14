@@ -71,7 +71,7 @@ plot(model, xlim=c(-10,10))
 }
 
 #we can specify that we want 'x' and not 'cos(x)' by providing the name of
-the explanatory and we get the correct results
+# the explanatory and we get the correct results
 plot(model, explanatory='x', xlim=c(-10,10))
 
 
