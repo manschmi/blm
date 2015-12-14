@@ -13,17 +13,13 @@ test_that(paste("Deviance of a blm fit can max be equal to lm fit using seed", s
 
 
 seed <- as.integer(1000 * rnorm(1))
-test_that(paste("Mean deviance of a blm fit gets closer to lm fit using seed", seed), {
-  w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
-  x <- rnorm(10)
-  y <- rnorm(10, w1 * x + w0, 1/b)
-  mod10 <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
+test_that(paste("1/sd of residuals close to precision of data using seed", seed), {
+  w0 <- 0.3 ; w1 <- 1.1 ; b <- 0.1
+  x <- rnorm(1000)
+  y <- rnorm(1000, w1 * x + w0, 1/b)
+  mod1000 <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
   
-  x <- rnorm(100)
-  y <- rnorm(100, w1 * x + w0, 1/b)
-  mod100 <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
-  
-  expect_gte(mean(deviance(mod10)), mean(deviance(mod100)))
+  expect_equal(1/sd(resid(mod1000)), b, tolerance=.1)
   
 })
 
