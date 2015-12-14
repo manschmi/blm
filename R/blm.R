@@ -128,7 +128,7 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
     #can occur ie when updating to a new formula with fewer terms
     if ( all(mod_vars %in% prior_vars) ){
       message('prior contains more variables than the model : variables not used in the model are ignored in the fit')
-      prior <- subset(prior, colnames(matrix))
+      prior <- mv_dist.subset(prior, colnames(matrix))
     } else {
       missing <- mod_vars[!(mod_vars %in% prior_vars)]
       stop(paste('model formula contains variable names not provided in the prior', missing ))
@@ -575,7 +575,7 @@ summary.blm <- function(object, ...){
 #' }
 #'
 #' #we can specify that we want 'x' and not 'cos(x)' by providing the name of
-#' the explanatory and we get the correct results
+#' # the explanatory and we get the correct results
 #' plot(model, explanatory='x', xlim=c(-10,10))
 #' 
 #' 
