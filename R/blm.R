@@ -116,7 +116,7 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
   }
   
   prior <- distribution(prior)
-
+  
   prior_vars <- mv_dist.var_names(prior)
   if ( !all(prior_vars %in% mod_vars) ) {
     #can occur ie when updating to a new formula with fewer terms
@@ -128,7 +128,7 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
       stop(paste('model formula contains variable names not provided in the prior', missing ))
     }
   }
-
+  
   prior_covar <- mv_dist.covar(prior)
   
   response <- model.response(frame)
@@ -138,7 +138,7 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
   covar <- solve(prior_covar + lhd_term)
   
   means <- beta * covar %*% t(matrix) %*%  response
-
+  
   posterior <- distribution(mv_dist(means, covar))
   
   mod <- structure(list(call = sys.call(),
@@ -286,7 +286,7 @@ covar.blm <- function(object, ...){
 confint.blm <- function (object, 
                          param, 
                          level = .95, ...) {
-
+  
   if (missing(param)) {
     param <- seq_along(coef(object))
   }
@@ -301,7 +301,7 @@ confint.blm <- function (object,
   matrix(c(lower, upper),
          nrow=length(lower),
          dimnames=list(names(cf),
-                      paste(100*c(l,1-l), '%')))
+                       paste(100*c(l,1-l), '%')))
 }
 
 
@@ -347,7 +347,7 @@ predict.blm <- function(object, newdata = NULL, report.var = FALSE, ...){
   
   if (report.var) {
     vars <- apply(matrix, 1, function(xi) 
-                    1/object$beta +  t(xi) %*% covar.blm(object) %*% xi)
+      1/object$beta +  t(xi) %*% covar.blm(object) %*% xi)
     
     return(list(mean = means, var = vars))
   }
@@ -484,12 +484,12 @@ print.blm <- function(object, ...){
 summary.blm <- function(object, ...){
   
   structure(list(
-      call = object$call,
-      prior = object$prior,
-      posterior = object$posterior
-    ),
-    class = "summary.blm")
-
+    call = object$call,
+    prior = object$prior,
+    posterior = object$posterior
+  ),
+  class = "summary.blm")
+  
 }
 
 
@@ -499,15 +499,21 @@ summary.blm <- function(object, ...){
 #' Plots the blm object along with the MAP fit line and quantiles for the fit.
 #' 
 #' @param object a blm object.
-#' @param explanatory a single number or vector for explanatory variables the 
-#'   response will be plotted against.
-#' @param data list or data frame containg points to display. Must contain
-#'   entries named 'x' and 'y'.
+#' @param explanatory name of the explanatory variable to be plotted on the x
+#'   axis.
 #' @param se display variance of blm fit?
-#' @param level single or vector of level(s) for fit variance to be shown.
+#' @param se_level level for the interval of the distribution of response to be shown.
 #' @param show_lm display the regular lm fit on the plot?
-#' @param expand_fit add fit lines to the limits of the plot?
-#'   
+#' @param expand_fit expand fit lines to the limits of the plot?
+#' @param show_fit_legend add a legend for the fit lines to the plot?
+#' @param fit_legend_param parameters for the fit legend?
+#' @param xlab label for the x axis.
+#' @param ylab label for the y axis.
+#'
+#' @details Plots the data points used to create the \code{\link{blm}} object, together with the blm fit, 95% quanitle of the blm fit and the (frequentist) lm fit.
+#' \code{explanatory} can be used to specify what parameter is to be plotted on the x axis. This can be useful ie when plotting models with a 'pure' explanatory ie y~sin(x); where 'x' is not part of the model. Providing \code{explanatory = 'x'} will produce the correct output for such models.
+#' \code{data} can be used to display additional data points on the plot. The data used to create the model will always be shown.
+#' 
 #' @examples
 #' x <- rnorm(100)
 #' b <- 1.3
@@ -521,17 +527,16 @@ summary.blm <- function(object, ...){
 #' 
 #' 
 #' ##need to do more in case of complex model that does not contain a term 'x'
-#' y <- rnorm(100, mean = w0 + w1 * cos(x) + w2 *sin(x), sd = sqrt(1/b))
-#' model <- blm(y ~ cos(x) + sin(x), prior = NULL, beta = b, 
+#' y <- rnorm(100, mean = w0 + w1 * cos(x), sd = sqrt(1/b))
+#' model <- blm(y ~ cos(x), prior = NULL, beta = b, 
 #'              data = data.frame(x=x, y=y))
 #' 
-#' \dontrun{
-#' #does not know what to plot when explanatory not part of model frame (ie here
-#' only 'cos(x)' and 'sin(x)' but not 'x' is present. 
+#' #plots y~cos(x) on the x-axis and this does not produce correct results.
 #' plot(model, xlim=c(-10,10))
-#' }
-#' #can be fixed by providing the points
-#' plot(model, data=data.frame(x=x, y=y), xlim=c(-10,10))
+#'
+#' #we can specify that we want 'x' and not 'cos(x)' by providing the name of
+#' the explanatory and we get the correct results
+#' plot(model, explanatory='x', xlim=c(-10,10))
 #' 
 #' 
 #' #response and explanatory names do not matter
@@ -546,70 +551,102 @@ summary.blm <- function(object, ...){
 #' plot(model)
 #' 
 #' 
-#' #dealing with multiple explanatory variables
-#' x <- rnorm(100)
-#' z <- rnorm(100)
-#' b <- 1.3
-#' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
-#' 
-#' y <- rnorm(100, mean = w0 + w1 * x + w2 * z, sd = sqrt(1/b))
-#' model <- blm(y ~ x + z, prior = NULL, beta = b, 
-#'                data = data.frame(y=y, x=x, z=z))
-#' 
-#' \dontrun{
-#'  #not functional at the moment
-#'  plot(model, data = data.frame(y=y, x=x, z=z))
-#' }
-#' 
-#' 
-#' 
 #' @export
-plot.blm <- function(object, explanatory = 1, se_level = .95, 
-                     data=NULL, show_lm=TRUE, expand_fit=TRUE, ...){
+plot.blm <- function(object, explanatory = NULL, 
+                     se=TRUE, se_level = .95, 
+                     data=NULL, show_lm=TRUE, expand_fit=TRUE, 
+                     show_fit_legend=TRUE, fit_legend_param=NULL,
+                     xlab, ylab, ...){
   
-  frame <- object[['frame']]
-  
-  if ( !missing(data)) {
-    x_lab <- 'x'
-    x <- data[,'x']
-    response_lab <- 'y'
-    response <- data[,'y']
+  if ( missing(explanatory)) {
+    #take the first term of the formula per default
+    frame <- object[['frame']]
+    explanatory <- labels(terms(frame))[1]
   } else {
-    x_lab <- labels(terms(frame))[explanatory]
-    x <- frame[,x_lab]
-    response_lab <- colnames(frame)[attr(terms(frame), 'response')]
-    response <- model.response(frame)
+    frame <- expand.model.frame(object, explanatory, na.expand = FALSE)
   }
   
-    plot(x, response, type = "p", pch=19,
-         xlab = x_lab, ylab = response_lab, ...)
-    
-    
-    if ( expand_fit ) {
-      plot_lims <- par('usr')[1:2]
-      x_fit <- seq(plot_lims[1], plot_lims[2], length.out=1000)
-      data <- data.frame(x=x_fit)
-      colnames(data)[1] <- x_lab
-    } else {
-      x_order <- order(object$frame[,x_lab])
-      x_fit <- object$frame[x_order,x_lab]
-      data <- object$frame[x_order,]
-    }
+  x <- frame[,explanatory]
+  response_lab <- colnames(frame)[attr(terms(frame), 'response')]
+  response <- model.response(frame)
   
-    if ( show_lm ) {
-      #add lm fit
-      y_lm <- predict(lm(object$formula, object$frame), data)
-      lines(y_lm~x_fit, col='red', lty=2)
-    } 
+  if (missing('xlab')) xlab <- explanatory
+  if (missing('ylab')) ylab <- response_lab
+  
+  plot(x, response, type = "p", pch=19, xlab=xlab, ylab=ylab, ...)
+  
+  if ( expand_fit ) {
+    plot_lims <- par('usr')[1:2]
+    x_fit <- seq(plot_lims[1], plot_lims[2], length.out=1000)
+    data <- data.frame(x=x_fit)
+    colnames(data)[1] <- explanatory
+  } else {
+    x_order <- order(object$frame[,explanatory])
+    x_fit <- object$frame[x_order,explanatory]
+    data <- object$frame[x_order,]
+  }
+  
+  if ( show_lm ) {
+    #add lm fit
+    y_lm <- predict(lm(object$formula, object$frame), data)
+    lines(y_lm~x_fit, col='red', lty=2)
+  } 
+  
+  #add blm fit
+  y_blm <- predict(object, data, report.var=T)
+  y_blm_map <- y_blm$mean
+  lines(y_blm_map~x_fit, col='blue', lty=1)
+  
+  #add quantiles of the fit
+  if (se) {
+    upper <- qnorm(se_level, mean = y_blm$mean, sd = sqrt(y_blm$var))
+    lower <- qnorm(1-se_level, mean = y_blm$mean, sd = sqrt(y_blm$var))
     
-    
-    #add blm fit
-    y_blm <- predict(object, data, report.var=T)
-    y_blm_map <- y_blm$mean
-    upper <- qnorm(level, mean = y_blm$mean, sd = sqrt(y_blm$var))
-    lower <- qnorm(1-level, mean = y_blm$mean, sd = sqrt(y_blm$var))
-    lines(y_blm_map~x_fit, col='blue', lty=1)
     lines(lower~x_fit, col='blue', lty=2)
     lines(upper~x_fit, col='blue', lty=2) 
+  }
+
+  ##add the legend
+  if (show_fit_legend) {
+    if (missing(fit_legend_param)) {
+      fit_legend_param <- list()
+    }
+    if (is.null(fit_legend_param[['x']])) {
+      fit_legend_param[['x']] <- 'topleft'
+    }
+    if (is.null(fit_legend_param[['legend']])) {
+      if ( show_lm ) {
+        fit_legend_param[['legend']] <- c('lm fit', 'blm MAP')
+      } else {
+        fit_legend_param[['legend']] <- 'blm MAP'
+      }
+      if (se) {
+        fit_legend_param[['legend']] <- c(fit_legend_param[['legend']],
+                                          paste(100*se_level, '% quantile'))
+      }
+    }
+    if (is.null(fit_legend_param[['lty']])) {
+      if ( show_lm ) {
+        fit_legend_param[['lty']] <- c(2, 1)
+      } else {
+        fit_legend_param[['lty']] <- 1
+      }
+      if (se) {
+        fit_legend_param[['lty']] <- c(fit_legend_param[['lty']], 2)
+      }
+    }
+    if (is.null(fit_legend_param[['col']])) {
+      fit_legend_param[['col']] <- c()
+      if ( show_lm ) {
+        fit_legend_param[['col']] <- c('red', 'blue')
+      } else {
+        fit_legend_param[['col']] <- 'blue'
+      }
+      if (se) {
+        fit_legend_param[['col']] <- c(fit_legend_param[['col']], 'blue')
+      }   
+    }
+    do.call(legend, fit_legend_param)
+  }
   
 }
