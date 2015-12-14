@@ -6,6 +6,11 @@
 \usage{
 mv_dist.means(d, ...)
 }
+\arguments{
+\item{d}{object of class \code{\link{mv_dist}}.}
+
+\item{...}{other arguments (currently ignored).}
+}
 \description{
 Means of multivariate normal distribution object of class \code{mv_dist}.
 }

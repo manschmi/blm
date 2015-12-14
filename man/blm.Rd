@@ -8,21 +8,41 @@
 \usage{
 blm(formula, prior = NULL, beta = 1, ...)
 }
+\arguments{
+\item{formula}{an object of class "formula": a symbolic description of the 
+model to be fitted.}
+
+\item{prior}{the prior distribution, either a \code{mv_dist} or a \code{blm} 
+object.}
+
+\item{beta}{the precision of the data used for the model.}
+
+\item{...}{Additional arguments and values.}
+}
+\value{
+A object of class \code{blm}. An object of class "lm" is a list 
+  containing at least the following components: 
+  \describe{ 
+   \item{call}{the matched call} 
+   \item{formula}{the formula used} 
+   \item{frame}{the model frame used} 
+   \item{matrix}{the model matrix used} 
+   \item{beta}{the precision of the data} 
+   \item{prior}{the prior distribution used} 
+   \item{posterior}{the posterior distribution}
+  }
+}
 \description{
 The \code{blm} package is for construction and analysis of bayesian linear
- regression models.
+regression models.
 
-Computes a bayesian linear regression fit. It only works for
- fixed variance beta.
- 
- @param formula Object of class "formula": a symbolic description of the 
-   model to be fitted.
- @param prior The prior distribution, either a \code{mv_dist} or a \code{blm}   object.
- @param beta Precision of the model fit.
- @param use_data_from_prior logical. If \code{TRUE} response and explanatory variables are extracted from the "prior". The prior needs to be provided as model object, ie \code{blm}.
- @param ... Additional arguments, or arguments with changed values
- 
- @export
+Computes a bayesian linear regression fit. The current implementation 
+requires knowledge about the precision \code{beta} of the observations.
+}
+\details{
+Models for \code{blm} are provided as for \code{\link{lm}}. If prior
+  distribution \code{prior} of the wieghts is not provided the prior means 
+  are set to 0 and the variances to 1.
 }
 \section{blm functions}{
 
@@ -30,9 +50,36 @@ blm
 update.blm
 print.blm
 summary.blm
+fitted.blm
+predict.blm
+summary.blm
 resid.blm
 coef.blm
 deviance.blm
 plot.blm
+}
+\examples{
+ 
+   w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
+   x <- rnorm(50)
+   y <- rnorm(50, w1 * x + w0, 1/b)
+   mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
+   
+   summary(mod)
+   plot(mod)
+   
+   #use of a prior, typically from an existing model
+   x2 <- rnorm(50)
+   y2 <- rnorm(50, w1 * x2 + w0, 1/b)
+   mod <- blm(y~x, prior=mod, beta=b, data=data.frame(x=x2, y=y2))
+   mod
+   
+   #use with 2 explanatory variables
+   w2 <- 3.3
+   z <- rnorm(50)
+   y <- rnorm(50, w2 * z + w1 * x + w0, 1/b)
+   mod <- blm(y~x+z, beta=b, data=data.frame(x=x, y=y, z=z))
+   mod
+ 
 }
 

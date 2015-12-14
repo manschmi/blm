@@ -4,7 +4,12 @@
 \alias{print.blm}
 \title{Print}
 \usage{
-\method{print}{blm}(object, ...)
+\method{print}{blm}(x, ...)
+}
+\arguments{
+\item{x}{a \code{\link{blm}} object.}
+
+\item{...}{other arguments (currently ignored).}
 }
 \description{
 Print a blm object

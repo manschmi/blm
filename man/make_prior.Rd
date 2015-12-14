@@ -4,13 +4,33 @@
 \alias{make_prior}
 \title{Prior distribution}
 \usage{
-make_prior(mean, alpha, dim)
+make_prior(mean, alpha, dim = length(mean))
+}
+\arguments{
+\item{mean}{mean or a vector of the mean(s) of the distribution.}
+
+\item{alpha}{single value or vector for precision(s) of the distribution.}
+
+\item{dim}{number of variables for the distribution.}
 }
 \value{
-An object of class \code{mv_dist} containing a "means": vector of 
-means and "covar": the covariance matrix.
+An object of class \code{mv_dist} with provided means and covariances
+  computed as 1/\code{alpha}.
 }
 \description{
 Creates a prior distribution for a blm object
+}
+\details{
+Creates a multivariate normal distribution object of class 
+  \code{\link{mv_dist}} that holds \code{means} and covariance \code{covar} 
+  of a multivariate normal distribution. If number of means or covars is less
+  than \code{dim}, the values provided are expanded to fill the multivariate 
+  distribution.
+}
+\examples{
+ make_prior(0,1,2)
+ 
+ make_prior(c(0,1),c(1,2))
+ 
 }
 

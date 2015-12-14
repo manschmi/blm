@@ -4,14 +4,16 @@
 \alias{confint.blm}
 \title{Confidence Interval for Coefficients of a Bayesian Linear Model}
 \usage{
-\method{confint}{blm}(object, param, level = 0.95, ...)
+\method{confint}{blm}(object, parm, level = 0.95, ...)
 }
 \arguments{
 \item{object}{a \code{blm} object.}
 
-\item{param}{parameter for which confidence interval should be computed. Either a number or vector of numbers. If missig all parameters are considered.}
+\item{parm}{parameter for which confidence interval should be computed. Either a number or vector of numbers. If missig all parameters are considered.}
 
 \item{level}{confidence level}
+
+\item{...}{other arguments (currently ignored).}
 }
 \value{
 Pseudo confidence interval of parameter(s) of the \code{blm} object.

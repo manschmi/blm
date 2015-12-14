@@ -4,15 +4,86 @@
 \alias{plot.blm}
 \title{Plot of a Bayesian Linear Model Fit}
 \usage{
-\method{plot}{blm}(object, explanatory = 1, ...)
+\method{plot}{blm}(x, explanatory = NULL, se = TRUE, se_level = 0.95,
+  show_lm = TRUE, expand_fit = TRUE, show_fit_legend = TRUE,
+  fit_legend_param = NULL, xlab, ylab, ...)
 }
 \arguments{
-\item{object}{a blm object.}
+\item{x}{a blm object.}
 
-\item{explanatory}{a single number or vector for explanatory variables the 
-response will be plotted against.}
+\item{explanatory}{name of the explanatory variable to be plotted on the x 
+axis.}
+
+\item{se}{display variance of blm fit?}
+
+\item{se_level}{level for the interval of the distribution of response to be
+shown.}
+
+\item{show_lm}{display the regular lm fit on the plot?}
+
+\item{expand_fit}{expand fit lines to the limits of the plot?}
+
+\item{show_fit_legend}{add a legend for the fit lines to the plot?}
+
+\item{fit_legend_param}{parameters for the fit legend?}
+
+\item{xlab}{label for the x axis.}
+
+\item{ylab}{label for the y axis.}
+
+\item{...}{other arguments passed to plot.}
 }
 \description{
 Plots the blm object along with the MAP fit line and quantiles for the fit.
+}
+\details{
+Plots the data points used to create the \code{\link{blm}} object,
+  together with the blm fit, 95% quanitle of the blm fit and the
+  (frequentist) lm fit. \code{explanatory} can be used to specify what
+  parameter is to be plotted on the x axis. This can be useful ie when
+  plotting models with a 'pure' explanatory ie y~sin(x); where 'x' is not
+  part of the model. Providing \code{explanatory = 'x'} will produce the
+  correct output for such models. \code{data} can be used to display
+  additional data points on the plot. The data used to create the model will
+  always be shown.
+}
+\examples{
+x <- rnorm(100)
+b <- 1.3
+w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
+
+y <- rnorm(100, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b))
+model <- blm(y ~ x + sin(x), prior = NULL, beta = b, 
+               data = data.frame(x=x, y=y))
+
+plot(model, xlim=c(-10,10))
+
+
+##need to do more in case of complex model that does not contain a term 'x'
+y <- rnorm(100, mean = w0 + w1 * cos(x), sd = sqrt(1/b))
+model <- blm(y ~ cos(x), prior = NULL, beta = b, 
+             data = data.frame(x=x, y=y))
+
+#plots y~cos(x) on the x-axis and this does probably not produce the plot we
+want.
+plot(model, xlim=c(-10,10))
+
+#we can specify that we want 'x' and not 'cos(x)' by providing the name of
+the explanatory and we get the correct results
+plot(model, explanatory='x', xlim=c(-10,10))
+
+
+#response and explanatory names do not matter
+z_not_x <- rnorm(100)
+b <- 1.3
+w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
+
+v_not_y <- rnorm(100, mean = w0 + w1 * z_not_x + w2 *sin(z_not_x), sd = sqrt(1/b))
+model <- blm(v_not_y ~ z_not_x + sin(z_not_x), prior = NULL, beta = b, 
+               data = data.frame(z_not_x=z_not_x, v_not_y=v_not_y))
+
+plot(model)
+
+
 }
 

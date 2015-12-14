@@ -8,6 +8,8 @@
 }
 \arguments{
 \item{object}{a \code{blm} object.}
+
+\item{...}{other arguments (currently ignored).}
 }
 \value{
 Residuals of the \code{blm} object.

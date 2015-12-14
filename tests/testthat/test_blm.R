@@ -90,7 +90,7 @@ test_that("Evaluates construction and updating of simple blm with intercept to m
   mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
   
   ##updating vs constructing to a new model wo intercept
-  mod2 <- update.blm(mod, formula=y~x+0)
+  mod2 <- update(mod, formula=y~x+0)
   
   mod3 <- blm(y~x+0, prior=mod, beta=b, 
                  data=data.frame(x=x, y=y))
@@ -146,7 +146,7 @@ test_that(paste("Evaluates models with 2 explanatory variables", seed), {
   compare_blm(mod2,mod3)
   
   #we can also use update
-  mod4 <- update.blm(mod, formula=y~x)
+  mod4 <- update(mod, formula=y~x)
   
   compare_blm(mod2,mod4)
 })

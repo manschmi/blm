@@ -4,14 +4,16 @@
 \alias{mv_dist}
 \title{Multivariate distribution}
 \usage{
-mv_dist(means, covar)
+mv_dist(means, covar, var_names)
 }
 \arguments{
 \item{means}{vector of means of the variables}
 
 \item{covar}{covariance matrix of the variables}
 
-\item{...}{currently ignored}
+\item{var_names}{optional names of the variables}
+
+\item{...}{other arguments (currently ignored).}
 }
 \value{
 An object of class \code{distribution} containing: 
@@ -22,5 +24,9 @@ An object of class \code{distribution} containing:
 }
 \description{
 Means and covariance matrix of a multivariate normal distribution .
+}
+\examples{
+mv_dist(c(0,1),matrix(c(2,3,3,2),ncol=2))
+
 }
 

@@ -8,12 +8,14 @@
 }
 \arguments{
 \item{object}{a \code{blm} object.}
+
+\item{...}{other arguments (currently ignored).}
 }
 \value{
 Deviance of the \code{blm} object.
 }
 \description{
-\code{devaince.blm} returns \code{\link{devaince}} for a bayesian linear
+\code{deviance.blm} returns \code{\link{deviance}} for a bayesian linear
  model.
 }
 \details{

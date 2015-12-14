@@ -6,6 +6,17 @@
 \usage{
 \method{coef}{blm}(object, ...)
 }
+\arguments{
+\item{object}{a \code{blm} object.}
+
+\item{...}{other arguments (currently ignored).}
+}
+\value{
+A named vector for the maxium a posteriori likelihood of coefficients. 
+ That is, means of the posterior distribution of the coefficients of the
+  object. To get the covariance matrix for the coefficients use 
+  \code{\link{covar.blm}}.
+}
 \description{
 Coefficients from the posterior distribution of a bayesian model.
 }

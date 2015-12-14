@@ -6,6 +6,15 @@
 \usage{
 covar.blm(object, ...)
 }
+\arguments{
+\item{object}{a \code{blm} object.}
+
+\item{...}{other arguments (currently ignored).}
+}
+\value{
+Covariance matrix for the distribution of the coefficients of a 
+ \code{\link{blm}} model.
+}
 \description{
 Covariance of coefficients from the posterior distribution of a bayesian 
  model.

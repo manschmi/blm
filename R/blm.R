@@ -75,11 +75,15 @@ make_prior <- function(mean, alpha, dim=length(mean)){
 #'   
 #' @return A object of class \code{blm}. An object of class "lm" is a list 
 #'   containing at least the following components: 
-#'   \describe{ \item{call}{the
-#'   matched call} \item{formula}{the formula used} \item{frame}{the model frame
-#'   used} \item{matrix}{the model matrix used} \item{beta}{the precision of the
-#'   data} \item{prior}{the prior distribution used} \item{posterior}{the
-#'   posterior distribution}
+#'   \describe{ 
+#'    \item{call}{the matched call} 
+#'    \item{formula}{the formula used} 
+#'    \item{frame}{the model frame used} 
+#'    \item{matrix}{the model matrix used} 
+#'    \item{beta}{the precision of the data} 
+#'    \item{prior}{the prior distribution used} 
+#'    \item{posterior}{the posterior distribution}
+#'   }
 #'   
 #' @examples
 #'  
@@ -94,13 +98,15 @@ make_prior <- function(mean, alpha, dim=length(mean)){
 #'    #use of a prior, typically from an existing model
 #'    x2 <- rnorm(50)
 #'    y2 <- rnorm(50, w1 * x2 + w0, 1/b)
-#'    blm(y~x, prior=mod, beta=b, data=data.frame(x=x2, y=y2))
+#'    mod <- blm(y~x, prior=mod, beta=b, data=data.frame(x=x2, y=y2))
+#'    mod
 #'    
 #'    #use with 2 explanatory variables
 #'    w2 <- 3.3
 #'    z <- rnorm(50)
 #'    y <- rnorm(50, w2 * z + w1 * x + w0, 1/b)
-#'    blm(y~x+z, beta=b, data=data.frame(x=x, y=y, z=z))
+#'    mod <- blm(y~x+z, beta=b, data=data.frame(x=x, y=y, z=z))
+#'    mod
 #'  
 #' @export
 blm <- function(formula, prior = NULL, beta = 1, ...) {
@@ -174,17 +180,19 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
 #'    x <- rnorm(50)
 #'    y <- rnorm(50, w1 * x + w0, 1/b)
 #'    mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
+#'    mod
 #'    
 #'    #use of a prior, typically from an existing model
 #'    x2 <- rnorm(50)
 #'    y2 <- rnorm(50, w1 * x2 + w0, 1/b)
 #'    
 #'    #using posterior of mod as prior
-#'    update(mod, data=data.frame(x=x2, y=y2)) 
+#'    new_mod <- update(mod, data=data.frame(x=x2, y=y2)) 
+#'    new_mod
 #'    
 #'    #using same prior for mod and new model
-#'    update(mod, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
-#' 
+#'    new_mod2 <- update(mod, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
+#'    new_mod2
 #' 
 #' @export
 update.blm <- function(object, 
@@ -194,7 +202,7 @@ update.blm <- function(object,
                        data = object$frame, 
                        ...) {
   
-  blm(formula=formula, prior=object, beta=beta, data=data, ...)
+  blm(formula=formula, prior=prior, beta=beta, data=data, ...)
   
 }
 
@@ -261,9 +269,10 @@ covar.blm <- function(object, ...){
 #' Compute the confidence interval \code{\link{deviance}} for a bayesian linear
 #'  model.
 #'  
-#' @param x a \code{blm} object.
-#' @param param parameter for which confidence interval should be computed. Either a number or vector of numbers. If missig all parameters are considered.
+#' @param object a \code{blm} object.
+#' @param parm parameter for which confidence interval should be computed. Either a number or vector of numbers. If missig all parameters are considered.
 #' @param level confidence level
+#' @param ... other arguments (currently ignored).
 #'
 #' @details Deviance is the sum of squares of the residuals, extracted from the 
 #'  maxium a posterior estimate of the \code{blm} object.
@@ -283,16 +292,16 @@ covar.blm <- function(object, ...){
 #' confint(model, c(1,2))
 #' 
 #' @export 
-confint.blm <- function (x, 
-                         param, 
+confint.blm <- function (object, 
+                         parm, 
                          level = .95, ...) {
   
-  if (missing(param)) {
-    param <- seq_along(coef(x))
+  if (missing(parm)) {
+    param <- seq_along(coef(object))
   }
   
-  cf <- coef(x)[param]
-  cf_var <- diag(covar.blm(x))[param]
+  cf <- coef(object)[parm]
+  cf_var <- diag(covar.blm(object))[parm]
   
   l <- (1-level)/2
   lower <- qnorm(l, cf, sqrt(cf_var))
@@ -317,7 +326,8 @@ confint.blm <- function (x,
 #'  predict. If missing, values used for fitting will be extracted from the 
 #'  object.
 #' @param report.var report also variance for the predicted values.
-#'
+#' @param ... other arguments (currently ignored).
+#' 
 #' @return A vector of predicted values. If report.var = TRUE, a list containing
 #'  means and variances of the predicted values.
 #'  
@@ -328,6 +338,8 @@ confint.blm <- function (x,
 #' y <- rnorm(10, mean = w0 + w1 * x, sd = sqrt(1/b))
 #' model <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
 #' 
+#' predict(model)
+#' 
 #' x <- rnorm(10) 
 #' predict(model, data.frame(x=x))
 #' 
@@ -336,7 +348,7 @@ confint.blm <- function (x,
 predict.blm <- function(object, newdata = NULL, report.var = FALSE, ...){
   
   if ( missing(newdata) ) {
-    return( fitted(object, report.var=report.var, ...) )   
+    return( fitted(object, report.var=report.var) )   
   }
   
   responseless_formula <- delete.response(terms(object$formula))
@@ -364,6 +376,7 @@ predict.blm <- function(object, newdata = NULL, report.var = FALSE, ...){
 #'  
 #' @param object a \code{blm} object.
 #' @param report.var Report also variance for the fitted values.
+#' @param ... other arguments (currently ignored).
 #'
 #' @return A vector of fitted values. If report.var = TRUE, a list containing
 #'  means and variances of the fitted values. Identical to \code{predict.blm}
@@ -404,7 +417,8 @@ fitted.blm <- function(object, report.var = FALSE, ...){
 #'  model.
 #'  
 #' @param object a \code{blm} object.
-#'
+#' @param ... other arguments (currently ignored).
+#' 
 #' @return Residuals of the \code{blm} object.
 #'  
 #' @details Residuals are extracted from the maxium a posterior estimate of the 
@@ -435,10 +449,11 @@ residuals.blm <- function(object, ...){
 
 #' Deviance of Bayesian Linear Model
 #' 
-#' \code{devaince.blm} returns \code{\link{devaince}} for a bayesian linear
+#' \code{deviance.blm} returns \code{\link{deviance}} for a bayesian linear
 #'  model.
 #'  
 #' @param object a \code{blm} object.
+#' @param ... other arguments (currently ignored).
 #'  
 #' @details Deviance is the sum of squares of the residuals, extracted from the 
 #'  maxium a posterior estimate of the \code{blm} object.
@@ -465,6 +480,10 @@ deviance.blm <- function(object, ...){
 #' Print 
 #' 
 #' Print a blm object
+#' 
+#' @param x a \code{\link{blm}} object.
+#' @param ... other arguments (currently ignored).
+#' 
 #' @export
 print.blm <- function(x, ...){
   cat('Call:\n')
@@ -480,6 +499,16 @@ print.blm <- function(x, ...){
 #' 
 #' Summary of a blm object
 #' 
+#' @param object a \code{\link{blm}} object.
+#' @param ... other arguments (currently ignored).
+#' 
+#' @return An object of class \code{summary.blm} containing:
+#'  \describe{
+#'   \item{call}{the call of the object }
+#'   \item{prior}{the prior distribution of the fit}
+#'   \item{posterior}{the posterior distribution of the fit}
+#'  }
+#'   
 #' @export
 summary.blm <- function(object, ...){
   
@@ -499,16 +528,18 @@ summary.blm <- function(object, ...){
 #' Plots the blm object along with the MAP fit line and quantiles for the fit.
 #' 
 #' @param x a blm object.
-#' @param explanatory name of the explanatory variable to be plotted on the x
+#' @param explanatory name of the explanatory variable to be plotted on the x 
 #'   axis.
 #' @param se display variance of blm fit?
-#' @param se_level level for the interval of the distribution of response to be shown.
+#' @param se_level level for the interval of the distribution of response to be
+#'   shown.
 #' @param show_lm display the regular lm fit on the plot?
 #' @param expand_fit expand fit lines to the limits of the plot?
 #' @param show_fit_legend add a legend for the fit lines to the plot?
 #' @param fit_legend_param parameters for the fit legend?
 #' @param xlab label for the x axis.
 #' @param ylab label for the y axis.
+#' @param ... other arguments passed to plot.
 #' 
 #' @details Plots the data points used to create the \code{\link{blm}} object,
 #'   together with the blm fit, 95% quanitle of the blm fit and the
@@ -537,7 +568,8 @@ summary.blm <- function(object, ...){
 #' model <- blm(y ~ cos(x), prior = NULL, beta = b, 
 #'              data = data.frame(x=x, y=y))
 #' 
-#' #plots y~cos(x) on the x-axis and this does not produce correct results.
+#' #plots y~cos(x) on the x-axis and this does probably not produce the plot we
+#' want.
 #' plot(model, xlim=c(-10,10))
 #'
 #' #we can specify that we want 'x' and not 'cos(x)' by providing the name of
@@ -560,7 +592,7 @@ summary.blm <- function(object, ...){
 #' @export
 plot.blm <- function(x, explanatory = NULL, 
                      se=TRUE, se_level = .95, 
-                     data=NULL, show_lm=TRUE, expand_fit=TRUE, 
+                     show_lm=TRUE, expand_fit=TRUE, 
                      show_fit_legend=TRUE, fit_legend_param=NULL,
                      xlab, ylab, ...){
   

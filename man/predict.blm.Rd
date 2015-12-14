@@ -4,16 +4,18 @@
 \alias{predict.blm}
 \title{Predict}
 \usage{
-\method{predict}{blm}(object, newdata = NULL, report.var = F, ...)
+\method{predict}{blm}(object, newdata = NULL, report.var = FALSE, ...)
 }
 \arguments{
 \item{object}{a \code{blm} object.}
 
-\item{newdata}{An optional data frame containing variables with which to 
+\item{newdata}{an optional data frame containing variables with which to 
 predict. If missing, values used for fitting will be extracted from the 
 object.}
 
-\item{report.var}{Report also variance for the predicted values.}
+\item{report.var}{report also variance for the predicted values.}
+
+\item{...}{other arguments (currently ignored).}
 }
 \value{
 A vector of predicted values. If report.var = TRUE, a list containing
@@ -22,5 +24,19 @@ A vector of predicted values. If report.var = TRUE, a list containing
 \description{
 Predict means and variance of the response variable for a \code{\link{blm}}
  object.
+}
+\examples{
+x <- rnorm(10)
+b <- 1.3
+w0 <- 0.2 ; w1 <- 3
+y <- rnorm(10, mean = w0 + w1 * x, sd = sqrt(1/b))
+model <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
+
+predict(model)
+
+x <- rnorm(10) 
+predict(model, data.frame(x=x))
+
+
 }
 

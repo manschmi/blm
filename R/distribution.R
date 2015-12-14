@@ -75,8 +75,8 @@ mv_dist.var_names <- function(d, ...){
 
 #' Set variable Names from a Multivariate Normal Distribution
 #' 
-#' Set the names of the variables of a multivariate normal distribution object of class 
-#'  \code{mv_dist}.
+#' Set the names of the variables of a multivariate normal distribution object
+#' of class \code{mv_dist}.
 #' 
 #' @param d object of class \code{\link{mv_dist}}.
 #' @param var_names names of the variables of the distributions.
@@ -103,7 +103,7 @@ mv_dist.set_var_names <- function(d, var_names, ...){
 #' subset.mv_dist(d, 1)
 #' subset.mv_dist(d, 'b')
 #' 
-subset.mv_dist <- function(object, subset, ...){
+subset.mv_dist <- function(object, subset){
   object$means <- object$means[subset]
   object$covar <- object$covar[subset,subset]
   object
@@ -114,6 +114,7 @@ subset.mv_dist <- function(object, subset, ...){
 #' 
 #' Generic method returning the distribution of an object.
 #' 
+#' @param x object containing a distribution
 distribution <- function(x) UseMethod("distribution")
 
 #' Distribution

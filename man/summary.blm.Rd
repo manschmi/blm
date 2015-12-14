@@ -6,6 +6,19 @@
 \usage{
 \method{summary}{blm}(object, ...)
 }
+\arguments{
+\item{object}{a \code{\link{blm}} object.}
+
+\item{...}{other arguments (currently ignored).}
+}
+\value{
+An object of class \code{summary.blm} containing:
+ \describe{
+  \item{call}{the call of the object }
+  \item{prior}{the prior distribution of the fit}
+  \item{posterior}{the posterior distribution of the fit}
+ }
+}
 \description{
 Summary of a blm object
 }
