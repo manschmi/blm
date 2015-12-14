@@ -5,7 +5,7 @@
 #' @param means vector of means of the variables
 #' @param covar covariance matrix of the variables
 #' @param var_names optional names of the variables
-#' @param ... currently ignored
+#' @param ... other arguments (currently ignored).
 #'   
 #' @return An object of class \code{distribution} containing: 
 #' \describe{
@@ -38,6 +38,9 @@ mv_dist <- function(means, covar, var_names){
 #' 
 #' Means of multivariate normal distribution object of class \code{mv_dist}.
 #' 
+#' @param d object of class \code{\link{mv_dist}}.
+#' @param ... other arguments (currently ignored).
+#' 
 mv_dist.means <- function(d, ...){
   d$means
 }
@@ -49,6 +52,9 @@ mv_dist.means <- function(d, ...){
 #' Covariance matrix of multivariate normal distribution object of class 
 #'  \code{mv_dist}.
 #' 
+#' @param d object of class \code{\link{mv_dist}}.
+#' @param ... other arguments (currently ignored).
+#'
 mv_dist.covar <- function(d, ...){
   d$covar
 }
@@ -59,15 +65,23 @@ mv_dist.covar <- function(d, ...){
 #' Names of the variables of a multivariate normal distribution object of class 
 #'  \code{mv_dist}.
 #' 
+#' @param d object of class \code{\link{mv_dist}}.
+#' @param ... other arguments (currently ignored).
+#'
 mv_dist.var_names <- function(d, ...){
   names(d$means)
 }
 
-#' Variable Names from a Multivariate Normal Distribution
+
+#' Set variable Names from a Multivariate Normal Distribution
 #' 
-#' Names of the variables of a multivariate normal distribution object of class 
+#' Set the names of the variables of a multivariate normal distribution object of class 
 #'  \code{mv_dist}.
 #' 
+#' @param d object of class \code{\link{mv_dist}}.
+#' @param var_names names of the variables of the distributions.
+#' @param ... other arguments (currently ignored).
+#'
 mv_dist.set_var_names <- function(d, var_names, ...){
   names(d$means) <- var_names
   colnames(d$covar) <- var_names
@@ -95,10 +109,23 @@ subset.mv_dist <- function(object, subset, ...){
   object
 }
 
+
 #' Distribution
 #' 
 #' Generic method returning the distribution of an object.
 #' 
 distribution <- function(x) UseMethod("distribution")
+
+#' Distribution
+#' 
+#' Default for generic method returning the distribution of an object.
+#' 
+#' @param x object containing a distribution
 distribution.default <- function(x) x
+
+#' Distribution
+#' 
+#' Distribution of a \code{blm} object.
+#' 
+#' @param x \code{blm} object.
 distribution.blm <- function(x) x$posterior
