@@ -39,14 +39,16 @@ test_that(paste("Distribution of a blm fit reflects the precision of the model u
   covar.blm(mod33)
   
   #model with more precision should have smaller variance on the coefficients
-  expect_equal(all(as.vector(covar.blm(mod13)) > as.vector(covar.blm(mod33))), 
+  expect_equal(all(as.vector(abs(covar.blm(mod13))) > 
+                     as.vector(abs(covar.blm(mod33)))), 
                TRUE)
   
   #model provided with higher precision should have less variance on the 
   #coefficients than equal model provided with higher precision
   mod13b <- blm(y~x, beta=b33, data=data.frame(x=x, y=y))
 
-  expect_equal(all(as.vector(covar.blm(mod13)) > as.vector(covar.blm(mod13b))), 
+  expect_equal(all(as.vector(abs(covar.blm(mod13))) > 
+                     as.vector(abs(covar.blm(mod13b)))), 
                TRUE)
   
 })
