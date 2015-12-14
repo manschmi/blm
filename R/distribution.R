@@ -17,7 +17,7 @@
 #' mv_dist(c(0,1),matrix(c(2,3,3,2),ncol=2))
 #' 
 #' @export
-mv_dist <- function(means, covar, var_names){
+mv_dist <- function(means, covar, var_names, ...){
   
   if ( !missing(var_names) ) {
     names(means) <- var_names
@@ -28,7 +28,6 @@ mv_dist <- function(means, covar, var_names){
   structure(list(means = drop(means), 
                  covar = drop(covar)),
             class = 'mv_dist')
-  
   
 }
 
@@ -41,6 +40,7 @@ mv_dist <- function(means, covar, var_names){
 #' @param d object of class \code{\link{mv_dist}}.
 #' @param ... other arguments (currently ignored).
 #' 
+#' @export
 mv_dist.means <- function(d, ...){
   d$means
 }
@@ -55,6 +55,7 @@ mv_dist.means <- function(d, ...){
 #' @param d object of class \code{\link{mv_dist}}.
 #' @param ... other arguments (currently ignored).
 #'
+#' @export
 mv_dist.covar <- function(d, ...){
   d$covar
 }
@@ -68,6 +69,7 @@ mv_dist.covar <- function(d, ...){
 #' @param d object of class \code{\link{mv_dist}}.
 #' @param ... other arguments (currently ignored).
 #'
+#' @export
 mv_dist.var_names <- function(d, ...){
   names(d$means)
 }
@@ -82,6 +84,7 @@ mv_dist.var_names <- function(d, ...){
 #' @param var_names names of the variables of the distributions.
 #' @param ... other arguments (currently ignored).
 #'
+#' @export
 mv_dist.set_var_names <- function(d, var_names, ...){
   names(d$means) <- var_names
   colnames(d$covar) <- var_names
@@ -92,18 +95,19 @@ mv_dist.set_var_names <- function(d, var_names, ...){
 
 #' Subset a Multivariate Normal Distribution
 #' 
-#' Return ubset of variables of a multivariate normal distribution object of 
-#'  class \code{mv_dist}.
+#' Return subset of variables of a multivariate normal distribution object of
+#' class \code{mv_dist}.
 #' 
-#' @param object an object of class \code{mv_dist}
-#' @param subset names or indices of variables to extract from mv_dist
-#' 
+#' @param object an object of class \code{mv_dist}.
+#' @param subset names or indices of variables to extract from mv_dist.
+#'   
 #' @examples
 #' d <- mv_dist(c(0,1),matrix(c(2,3,3,2),ncol=2), c('a', 'b'))
-#' subset.mv_dist(d, 1)
-#' subset.mv_dist(d, 'b')
+#' mv_dist.subset(d, 1)
+#' mv_dist.subset(d, 'b')
 #' 
-subset.mv_dist <- function(object, subset){
+#' @export
+mv_dist.subset <- function(object, subset){
   object$means <- object$means[subset]
   object$covar <- object$covar[subset,subset]
   object
