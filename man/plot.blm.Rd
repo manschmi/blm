@@ -4,9 +4,11 @@
 \alias{plot.blm}
 \title{Plot of a Bayesian Linear Model Fit}
 \usage{
-\method{plot}{blm}(x, explanatory = NULL, se = TRUE, se_level = 0.95,
-  show_lm = TRUE, expand_fit = TRUE, show_fit_legend = TRUE,
-  fit_legend_param = NULL, xlab, ylab, ...)
+\method{plot}{blm}(x, explanatory = NULL, show_blm_interval = TRUE,
+  blm_interval_level = 0.95, expand_fit = TRUE, blm_parm = list(col =
+  "blue", lty = 1), blm_interval_parm = list(col = "blue", lty = 2),
+  show_lm = TRUE, lm_parm = list(col = "red", lty = 2),
+  show_legend = TRUE, xlab, ylab, ...)
 }
 \arguments{
 \item{x}{a blm object.}
@@ -14,38 +16,40 @@
 \item{explanatory}{name of the explanatory variable to be plotted on the x 
 axis.}
 
-\item{se}{display variance of blm fit?}
+\item{show_blm_interval}{display interval of the blm fitted values?}
 
-\item{se_level}{level for the interval of the distribution of response to be
+\item{blm_interval_level}{level for the interval of the distribution of response to be
 shown.}
-
-\item{show_lm}{display the regular lm fit on the plot?}
 
 \item{expand_fit}{expand fit lines to the limits of the plot?}
 
-\item{show_fit_legend}{add a legend for the fit lines to the plot?}
+\item{blm_parm}{named list of parameters for plotting of the blm fit lines.}
 
-\item{fit_legend_param}{parameters for the fit legend?}
+\item{show_lm}{display the regular lm fit on the plot?}
+
+\item{lm_parm}{plot parameters for the lm fit line.}
+
+\item{show_legend}{add a legend for the fit lines to the plot?}
 
 \item{xlab}{label for the x axis.}
 
 \item{ylab}{label for the y axis.}
 
 \item{...}{other arguments passed to plot.}
+
+\item{blm_fit_parm}{named list of parameters for plotting of the blm fit interval lines.}
 }
 \description{
 Plots the blm object along with the MAP fit line and quantiles for the fit.
 }
 \details{
-Plots the data points used to create the \code{\link{blm}} object,
-  together with the blm fit, 95% quanitle of the blm fit and the
-  (frequentist) lm fit. \code{explanatory} can be used to specify what
-  parameter is to be plotted on the x axis. This can be useful ie when
-  plotting models with a 'pure' explanatory ie y~sin(x); where 'x' is not
-  part of the model. Providing \code{explanatory = 'x'} will produce the
-  correct output for such models. \code{data} can be used to display
-  additional data points on the plot. The data used to create the model will
-  always be shown.
+Plots the data points used to create the \code{\link{blm}} object, 
+  together with the blm fit, 95% quanitle of the blm fit and the 
+  (frequentist) lm fit. \itemize{ \item \code{explanatory} can be used to
+  specify what parameter is to be plotted on the x axis. This can be useful
+  ie when plotting models with a 'pure' explanatory ie y~sin(x); where 'x' is
+  not part of the model. \item providing \code{explanatory = 'x'} will
+  produce the correct output for such models. \item \code{expand_fit} shows fit lines and extend to plot limits, otherwise the fit is only shown for the range covered by the data. \item \code{fit_legend_param} a list (of lists) of parameters to customize the legend. The first item in each slot targets the lm fit line (if present), the second paramter the blm fit line and the third paramter the interval lines for the blm fit.}
 }
 \examples{
 x <- rnorm(100)
@@ -86,6 +90,15 @@ model <- blm(v_not_y ~ z_not_x + sin(z_not_x), prior = NULL, beta = b,
 
 plot(model)
 
+#customizing the plot, almost anything is possible
+plot(model, col='purple', pch=19, cex=.3, type='p')
+plot(model, col='purple', pch=19, cex=.3, xlim=c(-10,10), ylim=c(-50,50))
+plot(model, col='purple', pch=19, cex=.3, xlim=c(-10,10), ylim=c(-50,50), 
+     expand_fit=F)
+
+#customizing the legend
+ plot(model, show_fit_legend=FALSE)
+ plot(model, blm_param=list(cex=.5))
 
 }
 

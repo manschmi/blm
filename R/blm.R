@@ -530,27 +530,29 @@ summary.blm <- function(object, ...){
 #' @param x a blm object.
 #' @param explanatory name of the explanatory variable to be plotted on the x 
 #'   axis.
-#' @param se display variance of blm fit?
-#' @param se_level level for the interval of the distribution of response to be
-#'   shown.
+#' @param show_blm_interval display interval of the blm fitted values?
+#' @param blm_interval_level level for the interval of the distribution of
+#'   response to be shown.
+#' @param blm_parm named list of parameters for plotting of the blm fit lines.
+#' @param blm_fit_parm named list of parameters for plotting of the blm fit
+#'   interval lines.
 #' @param show_lm display the regular lm fit on the plot?
+#' @param lm_parm plot parameters for the lm fit line.
 #' @param expand_fit expand fit lines to the limits of the plot?
-#' @param show_fit_legend add a legend for the fit lines to the plot?
-#' @param fit_legend_param parameters for the fit legend?
+#' @param show_legend add a legend for the fit lines to the plot?
+#' @param legend_parm list of additional arguments for the legend.
 #' @param xlab label for the x axis.
 #' @param ylab label for the y axis.
 #' @param ... other arguments passed to plot.
 #' 
-#' @details Plots the data points used to create the \code{\link{blm}} object,
-#'   together with the blm fit, 95% quanitle of the blm fit and the
-#'   (frequentist) lm fit. \code{explanatory} can be used to specify what
-#'   parameter is to be plotted on the x axis. This can be useful ie when
-#'   plotting models with a 'pure' explanatory ie y~sin(x); where 'x' is not
-#'   part of the model. Providing \code{explanatory = 'x'} will produce the
-#'   correct output for such models. \code{data} can be used to display
-#'   additional data points on the plot. The data used to create the model will
-#'   always be shown.
-#' 
+#' @details Plots the data points used to create the \code{\link{blm}} object, 
+#'   together with the blm fit, 95% quanitle of the blm fit and the 
+#'   (frequentist) lm fit. \itemize{ \item \code{explanatory} can be used to
+#'   specify what parameter is to be plotted on the x axis. This can be useful
+#'   ie when plotting models with a 'pure' explanatory ie y~sin(x); where 'x' is
+#'   not part of the model. \item providing \code{explanatory = 'x'} will
+#'   produce the correct output for such models. \item \code{expand_fit} shows fit lines and extend to plot limits, otherwise the fit is only shown for the range covered by the data. \item \code{fit_legend_param} a list (of lists) of parameters to customize the legend. The first item in each slot targets the lm fit line (if present), the second paramter the blm fit line and the third paramter the interval lines for the blm fit.}
+#'   
 #' @examples
 #' x <- rnorm(100)
 #' b <- 1.3
@@ -590,12 +592,25 @@ summary.blm <- function(object, ...){
 #' 
 #' plot(model)
 #' 
+#' #customizing the plot, almost anything is possible
+#' plot(model, col='purple', pch=19, cex=.3, type='p')
+#' plot(model, col='purple', pch=19, cex=.3, xlim=c(-10,10), ylim=c(-50,50))
+#' plot(model, col='purple', pch=19, cex=.3, xlim=c(-10,10), ylim=c(-50,50), 
+#'      expand_fit=F)
+#' 
+#' #customizing the legend
+#'  plot(model, show_fit_legend=FALSE)
+#'  plot(model, blm_param=list(cex=.5))
 #' 
 #' @export
 plot.blm <- function(x, explanatory = NULL, 
-                     se=TRUE, se_level = .95, 
-                     show_lm=TRUE, expand_fit=TRUE, 
-                     show_fit_legend=TRUE, fit_legend_param=NULL,
+                     show_blm_interval=TRUE, blm_interval_level = .95,
+                     expand_fit=TRUE,
+                     blm_parm=list(col='blue', lty=1), 
+                     blm_interval_parm=list(col='blue', lty=2),
+                     show_lm=TRUE, 
+                     lm_parm=list(col='red', lty=2), 
+                     show_legend=TRUE, legend_parm=NULL,
                      xlab, ylab, ...){
   
   object <- x #want to keep argument name x to be consistent with generic fun
@@ -615,7 +630,7 @@ plot.blm <- function(x, explanatory = NULL,
   if (missing('xlab')) xlab <- explanatory
   if (missing('ylab')) ylab <- response_lab
   
-  plot(x, response, type = "p", pch=19, xlab=xlab, ylab=ylab, ...)
+  plot(x, response, xlab=xlab, ylab=ylab, ...)
   
   if ( expand_fit ) {
     plot_lims <- par('usr')[1:2]
@@ -631,26 +646,37 @@ plot.blm <- function(x, explanatory = NULL,
   if ( show_lm ) {
     #add lm fit
     y_lm <- predict(lm(object$formula, object$frame), data)
-    lines(y_lm~x_fit, col='red', lty=2)
+    lm_parm[['x']] <- x_fit
+    lm_parm[['y']] <- y_lm
+    do.call(lines, lm_parm)
   } 
   
   #add blm fit
   y_blm <- predict(object, data, report.var=T)
+  
+  #MAP fit lines
   y_blm_map <- y_blm$mean
-  lines(y_blm_map~x_fit, col='blue', lty=1)
+  blm_parm[['x']] <- x_fit
+  blm_parm[['y']] <- y_blm_map
+  do.call(lines, blm_parm)
+  
   
   #add quantiles of the fit
-  if (se) {
-    upper <- qnorm(se_level, mean = y_blm$mean, sd = sqrt(y_blm$var))
-    lower <- qnorm(1-se_level, mean = y_blm$mean, sd = sqrt(y_blm$var))
+  if (show_blm_interval) {
+    upper <- qnorm(blm_interval_level, mean = y_blm$mean, sd = sqrt(y_blm$var))
+    lower <- qnorm(1-blm_interval_level, mean = y_blm$mean, sd = sqrt(y_blm$var))
     
-    lines(lower~x_fit, col='blue', lty=2)
-    lines(upper~x_fit, col='blue', lty=2) 
+    blm_interval_parm[['x']] <- x_fit
+    blm_interval_parm[['y']] <- lower
+    do.call(lines, blm_interval_parm)
+    
+    blm_interval_parm[['y']] <- upper
+    do.call(lines, blm_interval_parm)
   }
 
   ##add the legend
-  if (show_fit_legend) {
-    if (missing(fit_legend_param)) {
+  if (show_legend) {
+    if (missing(legend_parm)) {
       fit_legend_param <- list()
     }
     if (is.null(fit_legend_param[['x']])) {
@@ -662,10 +688,10 @@ plot.blm <- function(x, explanatory = NULL,
       } else {
         fit_legend_param[['legend']] <- 'blm MAP'
       }
-      if (se) {
+      if (show_blm_interval) {
         fit_legend_param[['legend']] <- c(fit_legend_param[['legend']],
                                           paste(c('blm', 
-                                                  100*se_level, 
+                                                  100*blm_interval_level, 
                                                   '% quantile'), collapse=' '))
       }
     }

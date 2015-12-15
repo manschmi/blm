@@ -20,7 +20,7 @@ Pseudo confidence interval of parameter(s) of the \code{blm} object.
 Returns the quantile specified by level for the distribution of \code{param}.
 }
 \description{
-Compute the confidence interval \code{\link{deviance}} for a bayesian linear
+Compute the confidence interval \code{\link{confint}} for a bayesian linear
  model.
 }
 \details{
