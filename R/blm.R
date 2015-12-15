@@ -266,7 +266,7 @@ covar.blm <- function(object, ...){
 
 #' Confidence Interval for Coefficients of a Bayesian Linear Model
 #' 
-#' Compute the confidence interval \code{\link{deviance}} for a bayesian linear
+#' Compute the confidence interval \code{\link{confint}} for a bayesian linear
 #'  model.
 #'  
 #' @param object a \code{blm} object.
