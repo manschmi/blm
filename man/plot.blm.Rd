@@ -8,7 +8,7 @@
   blm_interval_level = 0.95, expand_fit = TRUE, blm_parm = list(col =
   "blue", lty = 1), blm_interval_parm = list(col = "blue", lty = 2),
   show_lm = TRUE, lm_parm = list(col = "red", lty = 2),
-  show_legend = TRUE, xlab, ylab, ...)
+  show_legend = TRUE, legend_parm = NULL, xlab, ylab, ...)
 }
 \arguments{
 \item{x}{a blm object.}
@@ -18,8 +18,8 @@ axis.}
 
 \item{show_blm_interval}{display interval of the blm fitted values?}
 
-\item{blm_interval_level}{level for the interval of the distribution of response to be
-shown.}
+\item{blm_interval_level}{level for the interval of the distribution of
+response to be shown.}
 
 \item{expand_fit}{expand fit lines to the limits of the plot?}
 
@@ -31,13 +31,16 @@ shown.}
 
 \item{show_legend}{add a legend for the fit lines to the plot?}
 
+\item{legend_parm}{list of additional arguments for the legend.}
+
 \item{xlab}{label for the x axis.}
 
 \item{ylab}{label for the y axis.}
 
 \item{...}{other arguments passed to plot.}
 
-\item{blm_fit_parm}{named list of parameters for plotting of the blm fit interval lines.}
+\item{blm_fit_parm}{named list of parameters for plotting of the blm fit
+interval lines.}
 }
 \description{
 Plots the blm object along with the MAP fit line and quantiles for the fit.

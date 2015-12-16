@@ -600,7 +600,7 @@ summary.blm <- function(object, ...){
 #' 
 #' #customizing the legend
 #'  plot(model, show_fit_legend=FALSE)
-#'  plot(model, blm_param=list(cex=.5))
+#'  plot(model, blm_parm=list(cex=.5))
 #' 
 #' @export
 plot.blm <- function(x, explanatory = NULL, 
@@ -679,44 +679,28 @@ plot.blm <- function(x, explanatory = NULL,
     if (missing(legend_parm)) {
       fit_legend_param <- list()
     }
-    if (is.null(fit_legend_param[['x']])) {
-      fit_legend_param[['x']] <- 'topleft'
+    if (is.null(legend_parm[['x']])) {
+      legend_parm[['x']] <- 'topleft'
     }
-    if (is.null(fit_legend_param[['legend']])) {
-      if ( show_lm ) {
-        fit_legend_param[['legend']] <- c('lm fit', 'blm MAP')
-      } else {
-        fit_legend_param[['legend']] <- 'blm MAP'
-      }
-      if (show_blm_interval) {
-        fit_legend_param[['legend']] <- c(fit_legend_param[['legend']],
+    if (is.null(legend_parm[['legend']])) {
+      legend_parm[['legend']] <- blm_parm[['legend']]
+      legend_parm[['lty']] <- blm_parm[['lty']]
+      legend_parm[['col']] <- blm_parm[['col']]
+    }
+    if (show_blm_interval) {
+        legend_parm[['legend']] <- c(legend_parm[['legend']],
                                           paste(c('blm', 
                                                   100*blm_interval_level, 
                                                   '% quantile'), collapse=' '))
-      }
+        legend_parm[['lty']] <- c(legend_parm[['lty']], blm_fit_parm[['lty']])
+        legend_parm[['col']] <- c(legend_parm[['col']], blm_fit_parm[['col']])
     }
-    if (is.null(fit_legend_param[['lty']])) {
-      if ( show_lm ) {
-        fit_legend_param[['lty']] <- c(2, 1)
-      } else {
-        fit_legend_param[['lty']] <- 1
-      }
-      if (se) {
-        fit_legend_param[['lty']] <- c(fit_legend_param[['lty']], 2)
-      }
+    if ( show_lm ) {
+        legend_parm[['legend']] <- c(legend_parm[['legend']], 'lm fit' )
+        legend_parm[['lty']] <- c(legend_parm[['lty']], lm_parm[['lty']])
+        legend_parm[['col']] <- c(legend_parm[['col']], lm_parm[['col']])
     }
-    if (is.null(fit_legend_param[['col']])) {
-      fit_legend_param[['col']] <- c()
-      if ( show_lm ) {
-        fit_legend_param[['col']] <- c('red', 'blue')
-      } else {
-        fit_legend_param[['col']] <- 'blue'
-      }
-      if (se) {
-        fit_legend_param[['col']] <- c(fit_legend_param[['col']], 'blue')
-      }   
-    }
-    do.call(legend, fit_legend_param)
+    do.call(legend, legend_parm)
   }
   
 }
