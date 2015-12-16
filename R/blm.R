@@ -19,7 +19,7 @@
 #' 
 #' 
 #' @docType package
-#' @name ms_blm
+#' @name blmr
 NULL
 
 
