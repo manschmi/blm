@@ -5,10 +5,9 @@
 \title{Plot of a Bayesian Linear Model Fit}
 \usage{
 \method{plot}{blm}(x, explanatory = NULL, show_blm_interval = TRUE,
-  blm_interval_level = 0.95, expand_fit = TRUE, blm_parm = list(col =
-  "blue", lty = 1), blm_interval_parm = list(col = "blue", lty = 2),
-  show_lm = TRUE, lm_parm = list(col = "red", lty = 2),
-  show_legend = TRUE, legend_parm = NULL, xlab, ylab, ...)
+  blm_interval_level = 0.95, expand_fit = TRUE, blm_col = "blue",
+  blm_map_lty = 1, blm_interval_lty = 2, show_lm = TRUE, lm_col = "red",
+  lm_lty = 2, show_legend = TRUE, legend_parm = NULL, xlab, ylab, ...)
 }
 \arguments{
 \item{x}{a blm object.}
@@ -23,11 +22,17 @@ response to be shown.}
 
 \item{expand_fit}{expand fit lines to the limits of the plot?}
 
-\item{blm_parm}{named list of parameters for plotting of the blm fit lines.}
+\item{blm_col}{color for the blm fit lines.}
+
+\item{blm_map_lty}{linetype for the blm MAP estimate line.}
+
+\item{blm_interval_lty}{linetype for the blm quantiles line.}
 
 \item{show_lm}{display the regular lm fit on the plot?}
 
-\item{lm_parm}{plot parameters for the lm fit line.}
+\item{lm_col}{color for the lm fit line.}
+
+\item{lm_lty}{linetype for the lm fit line.}
 
 \item{show_legend}{add a legend for the fit lines to the plot?}
 
@@ -38,9 +43,6 @@ response to be shown.}
 \item{ylab}{label for the y axis.}
 
 \item{...}{other arguments passed to plot.}
-
-\item{blm_fit_parm}{named list of parameters for plotting of the blm fit
-interval lines.}
 }
 \description{
 Plots the blm object along with the MAP fit line and quantiles for the fit.
@@ -77,8 +79,8 @@ want.
 plot(model, xlim=c(-10,10))
 }
 
-#we can specify that we want 'x' and not 'cos(x)' by providing the name of
-# the explanatory and we get the correct results
+#one can specify that we want 'x' and not 'cos(x)' on the x axis by providing
+#the name of the explanatory and we get the correct results 
 plot(model, explanatory='x', xlim=c(-10,10))
 
 
@@ -87,8 +89,10 @@ z_not_x <- rnorm(100)
 b <- 1.3
 w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
 
-v_not_y <- rnorm(100, mean = w0 + w1 * z_not_x + w2 *sin(z_not_x), sd = sqrt(1/b))
-model <- blm(v_not_y ~ z_not_x + sin(z_not_x), prior = NULL, beta = b, 
+means = w0 + w1 * z_not_x + w2 *sin(z_not_x)
+v_not_y <- rnorm(100, means, sd = sqrt(1/b))
+formula <- v_not_y ~ z_not_x + sin(z_not_x)
+model <- blm(formula, prior = NULL, beta = b, 
                data = data.frame(z_not_x=z_not_x, v_not_y=v_not_y))
 
 plot(model)
@@ -97,11 +101,16 @@ plot(model)
 plot(model, col='purple', pch=19, cex=.3, type='p')
 plot(model, col='purple', pch=19, cex=.3, xlim=c(-10,10), ylim=c(-50,50))
 plot(model, col='purple', pch=19, cex=.3, xlim=c(-10,10), ylim=c(-50,50), 
-     expand_fit=F)
+     expand_fit=FALSE)
 
-#customizing the legend
- plot(model, show_fit_legend=FALSE)
- plot(model, blm_param=list(cex=.5))
+#customizing the plot lines
+ plot(model, show_lm=FALSE)
+ plot(model, show_lm=FALSE, blm_interval_lty=3, blm_col='red')
+ plot(model, lm_col='blue', lm_lty=4, blm_interval_lty=3, blm_col='red')
+ 
+ plot(model, show_legend=FALSE)
+ plot(model, legend_parm=list(x='bottomright', cex=.5))
+ 
 
 }
 

@@ -19,8 +19,7 @@
 #' 
 #' 
 #' @docType package
-#' @name blm
-#' 
+#' @name ms_blm
 NULL
 
 
@@ -70,19 +69,19 @@ make_prior <- function(mean, alpha, dim=length(mean)){
 #' @param ... Additional arguments and values.
 #'   
 #' @details Models for \code{blm} are provided as for \code{\link{lm}}. If prior
-#'   distribution \code{prior} of the wieghts is not provided the prior means 
+#'   distribution \code{prior} of the weights is not provided the prior means 
 #'   are set to 0 and the variances to 1.
 #'   
 #' @return A object of class \code{blm}. An object of class "lm" is a list 
 #'   containing at least the following components: 
-#'   \describe{ 
-#'    \item{call}{the matched call} 
-#'    \item{formula}{the formula used} 
-#'    \item{frame}{the model frame used} 
-#'    \item{matrix}{the model matrix used} 
-#'    \item{beta}{the precision of the data} 
-#'    \item{prior}{the prior distribution used} 
-#'    \item{posterior}{the posterior distribution}
+#'   \itemize{
+#'    \item{call:      the matched call} 
+#'    \item{formula:   the formula used} 
+#'    \item{frame:     the model frame used} 
+#'    \item{matrix:    the model matrix used} 
+#'    \item{beta:      the precision of the data} 
+#'    \item{prior:     the prior distribution used} 
+#'    \item{posterior: the posterior distribution}
 #'   }
 #'   
 #' @examples
@@ -533,12 +532,13 @@ summary.blm <- function(object, ...){
 #' @param show_blm_interval display interval of the blm fitted values?
 #' @param blm_interval_level level for the interval of the distribution of
 #'   response to be shown.
-#' @param blm_parm named list of parameters for plotting of the blm fit lines.
-#' @param blm_fit_parm named list of parameters for plotting of the blm fit
-#'   interval lines.
-#' @param show_lm display the regular lm fit on the plot?
-#' @param lm_parm plot parameters for the lm fit line.
 #' @param expand_fit expand fit lines to the limits of the plot?
+#' @param blm_col color for the blm fit lines.
+#' @param blm_map_lty linetype for the blm MAP estimate line.
+#' @param blm_interval_lty linetype for the blm quantiles line.
+#' @param show_lm display the regular lm fit on the plot?
+#' @param lm_col color for the lm fit line.
+#' @param lm_lty linetype for the lm fit line.
 #' @param show_legend add a legend for the fit lines to the plot?
 #' @param legend_parm list of additional arguments for the legend.
 #' @param xlab label for the x axis.
@@ -576,8 +576,8 @@ summary.blm <- function(object, ...){
 #' plot(model, xlim=c(-10,10))
 #' }
 #'
-#' #we can specify that we want 'x' and not 'cos(x)' by providing the name of
-#' # the explanatory and we get the correct results
+#' #one can specify that we want 'x' and not 'cos(x)' on the x axis by providing
+#' #the name of the explanatory and we get the correct results 
 #' plot(model, explanatory='x', xlim=c(-10,10))
 #' 
 #' 
@@ -586,8 +586,10 @@ summary.blm <- function(object, ...){
 #' b <- 1.3
 #' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
 #' 
-#' v_not_y <- rnorm(100, mean = w0 + w1 * z_not_x + w2 *sin(z_not_x), sd = sqrt(1/b))
-#' model <- blm(v_not_y ~ z_not_x + sin(z_not_x), prior = NULL, beta = b, 
+#' means = w0 + w1 * z_not_x + w2 *sin(z_not_x)
+#' v_not_y <- rnorm(100, means, sd = sqrt(1/b))
+#' formula <- v_not_y ~ z_not_x + sin(z_not_x)
+#' model <- blm(formula, prior = NULL, beta = b, 
 #'                data = data.frame(z_not_x=z_not_x, v_not_y=v_not_y))
 #' 
 #' plot(model)
@@ -596,21 +598,30 @@ summary.blm <- function(object, ...){
 #' plot(model, col='purple', pch=19, cex=.3, type='p')
 #' plot(model, col='purple', pch=19, cex=.3, xlim=c(-10,10), ylim=c(-50,50))
 #' plot(model, col='purple', pch=19, cex=.3, xlim=c(-10,10), ylim=c(-50,50), 
-#'      expand_fit=F)
+#'      expand_fit=FALSE)
 #' 
-#' #customizing the legend
-#'  plot(model, show_fit_legend=FALSE)
-#'  plot(model, blm_parm=list(cex=.5))
+#' #customizing the plot lines
+#'  plot(model, show_lm=FALSE)
+#'  plot(model, show_lm=FALSE, blm_interval_lty=3, blm_col='red')
+#'  plot(model, lm_col='blue', lm_lty=4, blm_interval_lty=3, blm_col='red')
+#'  
+#'  plot(model, show_legend=FALSE)
+#'  plot(model, legend_parm=list(x='bottomright', cex=.5))
+#'  
 #' 
 #' @export
 plot.blm <- function(x, explanatory = NULL, 
-                     show_blm_interval=TRUE, blm_interval_level = .95,
+                     show_blm_interval=TRUE, 
+                     blm_interval_level = .95,
                      expand_fit=TRUE,
-                     blm_parm=list(col='blue', lty=1), 
-                     blm_interval_parm=list(col='blue', lty=2),
+                     blm_col='blue',
+                     blm_map_lty=1, 
+                     blm_interval_lty=2,
                      show_lm=TRUE, 
-                     lm_parm=list(col='red', lty=2), 
-                     show_legend=TRUE, legend_parm=NULL,
+                     lm_col='red', 
+                     lm_lty=2, 
+                     show_legend=TRUE, 
+                     legend_parm=NULL,
                      xlab, ylab, ...){
   
   object <- x #want to keep argument name x to be consistent with generic fun
@@ -646,9 +657,7 @@ plot.blm <- function(x, explanatory = NULL,
   if ( show_lm ) {
     #add lm fit
     y_lm <- predict(lm(object$formula, object$frame), data)
-    lm_parm[['x']] <- x_fit
-    lm_parm[['y']] <- y_lm
-    do.call(lines, lm_parm)
+    lines(y_lm~x_fit, col = lm_col, lty= lm_lty)
   } 
   
   #add blm fit
@@ -656,49 +665,42 @@ plot.blm <- function(x, explanatory = NULL,
   
   #MAP fit lines
   y_blm_map <- y_blm$mean
-  blm_parm[['x']] <- x_fit
-  blm_parm[['y']] <- y_blm_map
-  do.call(lines, blm_parm)
-  
+  lines(y_blm_map~x_fit, col = blm_col, lty= blm_map_lty)
   
   #add quantiles of the fit
   if (show_blm_interval) {
     upper <- qnorm(blm_interval_level, mean = y_blm$mean, sd = sqrt(y_blm$var))
     lower <- qnorm(1-blm_interval_level, mean = y_blm$mean, sd = sqrt(y_blm$var))
-    
-    blm_interval_parm[['x']] <- x_fit
-    blm_interval_parm[['y']] <- lower
-    do.call(lines, blm_interval_parm)
-    
-    blm_interval_parm[['y']] <- upper
-    do.call(lines, blm_interval_parm)
+    lines(lower~x_fit, col = blm_col, lty = blm_interval_lty)
+    lines(upper~x_fit, col = blm_col, lty = blm_interval_lty)
   }
 
   ##add the legend
   if (show_legend) {
     if (missing(legend_parm)) {
-      fit_legend_param <- list()
+      legend_parm <- list()
     }
     if (is.null(legend_parm[['x']])) {
       legend_parm[['x']] <- 'topleft'
     }
     if (is.null(legend_parm[['legend']])) {
-      legend_parm[['legend']] <- blm_parm[['legend']]
-      legend_parm[['lty']] <- blm_parm[['lty']]
-      legend_parm[['col']] <- blm_parm[['col']]
-    }
-    if (show_blm_interval) {
-        legend_parm[['legend']] <- c(legend_parm[['legend']],
-                                          paste(c('blm', 
-                                                  100*blm_interval_level, 
-                                                  '% quantile'), collapse=' '))
-        legend_parm[['lty']] <- c(legend_parm[['lty']], blm_fit_parm[['lty']])
-        legend_parm[['col']] <- c(legend_parm[['col']], blm_fit_parm[['col']])
+      if (show_blm_interval) {
+        legend_parm[['legend']] <- c('blm MAP', 
+                                     paste(c('blm', 
+                                             100*blm_interval_level, 
+                                             '% quantile'), collapse=' '))
+        legend_parm[['lty']] <- c(blm_map_lty, blm_interval_lty)
+        legend_parm[['col']] <- rep(blm_col,2)
+      } else {
+        legend_parm[['legend']] <- 'blm MAP'
+        legend_parm[['lty']] <- blm_map_lty
+        legend_parm[['col']] <- blm_col
+      }
     }
     if ( show_lm ) {
         legend_parm[['legend']] <- c(legend_parm[['legend']], 'lm fit' )
-        legend_parm[['lty']] <- c(legend_parm[['lty']], lm_parm[['lty']])
-        legend_parm[['col']] <- c(legend_parm[['col']], lm_parm[['col']])
+        legend_parm[['lty']] <- c(legend_parm[['lty']], lm_lty)
+        legend_parm[['col']] <- c(legend_parm[['col']], lm_col)
     }
     do.call(legend, legend_parm)
   }
