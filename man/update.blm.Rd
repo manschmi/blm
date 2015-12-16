@@ -28,7 +28,13 @@ Updates a \code{blm} object, using new data, parameters
  or a new model formula.
 }
 \details{
-Updates a \code{\link{blm}} object, using features of the input object except, if provided otherwise. The prior for the updated object is typically the posterior distribution of the input object, but can be specified specifically (as for all other parameters. Importantly, new data will only be used when specified as named argument.
+Updates a \code{\link{blm}} object, using features of the input 
+  object, except, if provided otherwise. The prior for the updated object is 
+  typically the posterior distribution of the input object, but can be 
+  specified specifically (as for all other parameters). Importantly, new data
+  will only be used when specified as named argument. \cr The function can
+  also be used to update the model formula, as described for
+  \code{\link{update}}.
 }
 \examples{
    w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
@@ -48,6 +54,15 @@ Updates a \code{\link{blm}} object, using features of the input object except, i
    #using same prior for mod and new model
    new_mod2 <- update(mod, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
    new_mod2
+   
+   #update model formula
+   new_mod2 <- update(mod, y~x+0, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
+   new_mod2
+   
+   #also works with R formula update semantics
+   new_mod2 <- update(mod, ~.+0, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
+   new_mod2
+   
 
 }
 

@@ -1,7 +1,7 @@
 Package: blm
 Type: Package
 Title: Bayesian Linear Regression
-Version: 0.0.2.9000
+Version: 0.0.3.9000
 Date: 2015-11-26
 Authors@R: person("Manfred", "Schmid",
   email = "ms@mbg.au.dk",

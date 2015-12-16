@@ -123,7 +123,7 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
   prior <- distribution(prior)
   
   prior_vars <- mv_dist.var_names(prior)
-  if ( !all(prior_vars %in% mod_vars) ) {
+  if ( length(prior_vars) != length(mod_vars) & !all(prior_vars %in% mod_vars) ) {
     #can occur ie when updating to a new formula with fewer terms
     if ( all(mod_vars %in% prior_vars) ){
       message('prior contains more variables than the model : variables not used in the model are ignored in the fit')
@@ -146,7 +146,7 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
   
   posterior <- distribution(mv_dist(means, covar))
   
-  mod <- structure(list(call = sys.call(),
+  mod <- structure(list(call = match.call(),
                         formula = formula,
                         frame = frame,
                         matrix = matrix,
@@ -169,11 +169,17 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
 #' @param prior prior distribution of the updated object.
 #' @param data data of the updated object.
 #' @param ... other arguments. These are passed to blm.
-#' 
-#' @details Updates a \code{\link{blm}} object, using features of the input object except, if provided otherwise. The prior for the updated object is typically the posterior distribution of the input object, but can be specified specifically (as for all other parameters. Importantly, new data will only be used when specified as named argument.
-#' 
+#'   
+#' @details Updates a \code{\link{blm}} object, using features of the input 
+#'   object, except, if provided otherwise. The prior for the updated object is 
+#'   typically the posterior distribution of the input object, but can be 
+#'   specified specifically (as for all other parameters). Importantly, new data
+#'   will only be used when specified as named argument. \cr The function can
+#'   also be used to update the model formula, as described for
+#'   \code{\link{update}}.
+#'   
 #' @return A object of class \code{blm}.
-#' 
+#'   
 #' @examples
 #'    w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
 #'    x <- rnorm(50)
@@ -192,6 +198,15 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
 #'    #using same prior for mod and new model
 #'    new_mod2 <- update(mod, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
 #'    new_mod2
+#'    
+#'    #update model formula
+#'    new_mod2 <- update(mod, y~x+0, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
+#'    new_mod2
+#'    
+#'    #also works with R formula update semantics
+#'    new_mod2 <- update(mod, ~.+0, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
+#'    new_mod2
+#'    
 #' 
 #' @export
 update.blm <- function(object, 
@@ -201,11 +216,31 @@ update.blm <- function(object,
                        data = object$frame, 
                        ...) {
   
-  blm(formula=formula, prior=prior, beta=beta, data=data, ...)
+  co <- getCall(object)
+  cm <- match.call()
   
+  updated_formula = update(object$formula, formula)
+  co$formula <- updated_formula
+  
+  co$beta <- beta
+  
+  if ( missing(prior) ) {
+    co$prior <- 'object$posterior'
+  } else {
+    co$prior <- cm$prior
+  }
+  
+  if ( !missing(data) ) {
+    co$data <- cm$data
+  }
+
+  mod <- blm(updated_formula, prior=prior, beta=beta, data=data,  ...) 
+  mod$call <- co
+  mod
 }
 
-
+update.default
+lm
 #' Coefficients
 #' 
 #' Coefficients from the posterior distribution of a bayesian model.
@@ -518,6 +553,33 @@ summary.blm <- function(object, ...){
   ),
   class = "summary.blm")
   
+}
+
+
+
+#' Print 
+#' 
+#' Print a summary.blm object
+#' 
+#' @param x a \code{\link{summary.blm}} object.
+#' @param ... other arguments (currently ignored).
+#' 
+#' @export
+print.summary.blm <- function(x, ...){
+  cat('Call:\n')
+  print(x$call)
+  cat('\n----\n')
+  cat('Posterior Coefficients:\n')
+  cat('\nEstimate:\n')
+  print(x$posterior$means)
+  cat('\nCovariance:\n')
+  print(x$posterior$covar)
+  cat('\n----\n')
+  cat('Prior Coefficients:\n')
+  cat('\nEstimate:\n')
+  print(x$prior$means)
+  cat('\nCovariance:\n')
+  print(x$prior$covar)
 }
 
 
