@@ -768,3 +768,32 @@ plot.blm <- function(x, explanatory = NULL,
   }
   
 }
+
+
+#' Plot of Residuals against Fitted Values
+#' 
+#' Plots residuals against fitted values for a \code{\link{blm}} object.
+#' 
+#' @param object a \code{\link{blm}} object.
+#' @param show_var display errorbars showing standard deviation on the 
+#'   residuals.
+#' @param ... other arguments passed to plot.
+#'   
+#' @detail Standard deviation of the residuals is same as for the fitted
+#'  values.
+#'
+plot_resid_vs_fitted <- function(object, show_var, ...) {
+  fits <- fitted(object, report.var = T)
+  y <- resid(object)
+  x <- fits$mean
+  plot(y~x)
+  
+  if (show_var) {
+    sd <- sqrt(fits$var)
+    segments(x, y-sd, x, y+sd)
+    x_range <- par('usr')[2] - par('usr')[1]
+    epsilon = x_range/200
+    segments(x-epsilon,y-sd,x+epsilon,y-sd)
+    segments(x-epsilon,y+sd,x+epsilon,y+sd)
+  }
+}
