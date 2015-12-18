@@ -821,6 +821,7 @@ scale_location_plot <- function(object, ...) {
 #' Q-Q Plot for a \code{\link{blm}} object.
 #' 
 #' @param object a \code{\link{blm}} object.
+#' @param qqline add qqline to the plot.
 #' @param ... other arguments passed to qqplot.
 #'   
 #' @detail Q-Q plots the sqrt(| residuals |) against fitted values. This transformation of the residuals is supposed to diminish skewness (see \code{\link{plot.lm}}. Note: In contrast to the \code{\link{plot.lm}} implementation, the residuals here are taken for sqrt(| residuals |) and not the standardized residuals.
@@ -829,11 +830,12 @@ qq_blm_plot <- function(object, ...) {
   x <- fitted(object, report.var = FALSE)
   y <- resid(object)
   
-  qqplot(x, y, 
+  qqnorm(x, 
          main = 'Normal Q-Q',
          xlab = paste('Theoretical Quantiles\n',
                       deparse(object$formula),sep=''),
          ylab = 'Residuals',
          ...)
+  if (qqline) qqline(x, lty=3)
   
 }
