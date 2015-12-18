@@ -782,11 +782,11 @@ plot.blm <- function(x, explanatory = NULL,
 #' @detail Standard deviation of the residuals is same as for the fitted
 #'  values.
 #'
-plot_resid_vs_fitted <- function(object, show_var, ...) {
+resid_vs_fitted_plot <- function(object, show_var=FALSE, ...) {
   fits <- fitted(object, report.var = T)
   y <- resid(object)
   x <- fits$mean
-  plot(y~x)
+  plot(y~x, ...)
   
   if (show_var) {
     sd <- sqrt(fits$var)
@@ -796,4 +796,21 @@ plot_resid_vs_fitted <- function(object, show_var, ...) {
     segments(x-epsilon,y-sd,x+epsilon,y-sd)
     segments(x-epsilon,y+sd,x+epsilon,y+sd)
   }
+}
+
+
+#' Scale-Location Plot
+#' 
+#' Scale-Location Plot for a \code{\link{blm}} object.
+#' 
+#' @param object a \code{\link{blm}} object.
+#' @param ... other arguments passed to plot.
+#'   
+#' @detail Scale-location plots the sqrt(| residuals |) against fitted values. This is supposed to diminish skewness.
+#'
+scale_location_plot <- function(object, ...) {
+  x <- fitted(object, report.var = FALSE)
+  y <- sqrt(abs(resid(object)))
+  plot(y~x, ...)
+  
 }
