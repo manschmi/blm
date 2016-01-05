@@ -239,8 +239,8 @@ update.blm <- function(object,
   mod
 }
 
-update.default
-lm
+
+
 #' Coefficients
 #' 
 #' Coefficients from the posterior distribution of a bayesian model.
@@ -786,7 +786,12 @@ resid_vs_fitted_plot <- function(object, show_var=FALSE, ...) {
   fits <- fitted(object, report.var = T)
   y <- resid(object)
   x <- fits$mean
-  plot(y~x, ...)
+  plot(y~x,  
+       main = 'Residuals vs Fitted',
+       xlab = paste('Fitted Values\n',
+                    deparse(object$formula),sep=''),
+       ylab = 'Residuals',
+       ...)
   
   if (show_var) {
     sd <- sqrt(fits$var)
@@ -811,7 +816,12 @@ resid_vs_fitted_plot <- function(object, show_var=FALSE, ...) {
 scale_location_plot <- function(object, ...) {
   x <- fitted(object, report.var = FALSE)
   y <- sqrt(abs(resid(object)))
-  plot(y~x, ...)
+  plot(y~x, 
+       main = 'Scale-Location',
+       xlab = paste('Fitted Values\n',
+                    deparse(object$formula),sep=''),
+       ylab = expression(sqrt(abs(Residuals))),
+       ...)
   
 }
 
@@ -826,7 +836,7 @@ scale_location_plot <- function(object, ...) {
 #'   
 #' @detail Q-Q plots the sqrt(| residuals |) against fitted values. This transformation of the residuals is supposed to diminish skewness (see \code{\link{plot.lm}}. Note: In contrast to the \code{\link{plot.lm}} implementation, the residuals here are taken for sqrt(| residuals |) and not the standardized residuals.
 #'
-qq_blm_plot <- function(object, ...) {
+qq_blm_plot <- function(object, qqline=TRUE, ...) {
   x <- fitted(object, report.var = FALSE)
   y <- resid(object)
   
@@ -836,6 +846,6 @@ qq_blm_plot <- function(object, ...) {
                       deparse(object$formula),sep=''),
          ylab = 'Residuals',
          ...)
-  if (qqline) qqline(x, lty=3)
+  if (qqline) qqline(x)
   
 }
