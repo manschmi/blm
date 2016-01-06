@@ -19,16 +19,15 @@
 #' @export
 mv_dist <- function(means, covar, var_names, ...){
   
-  if ( !missing(var_names) ) {
-    names(means) <- var_names
-    colnames(covar) <- var_names
-    rownames(covar) <- var_names
-  }
-  
-  structure(list(means = drop(means), 
+  d <- structure(list(means = drop(means), 
                  covar = drop(covar)),
             class = 'mv_dist')
   
+  if ( !missing(var_names) ) {
+    d <- mv_dist.set_var_names(d, var_names)
+  }
+  
+  d
 }
 
 
@@ -87,8 +86,15 @@ mv_dist.var_names <- function(d, ...){
 #' @export
 mv_dist.set_var_names <- function(d, var_names, ...){
   names(d$means) <- var_names
-  colnames(d$covar) <- var_names
-  rownames(d$covar) <- var_names
+  
+  if ( length(d$means) > 1 ) {
+    colnames(d$covar) <- var_names
+    rownames(d$covar) <- var_names
+  } else {
+    #univariate distribution case
+    names(d$covar) <- var_names
+  }
+  
   d
 }
 

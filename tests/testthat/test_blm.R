@@ -61,7 +61,7 @@ test_that(paste("Evaluates construction of simple blm with intercept using seed"
 
 
 seed <- as.integer(1000 * rnorm(1))
-test_that(paste("Evaluates construction and updating of simple blm with intercept  using seed", seed), {
+test_that(paste("Evaluates construction and updating of simple blm with intercept using seed", seed), {
   w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
   x <- rnorm(50)
   y <- rnorm(50, w1 * x + w0, 1/b)
@@ -83,7 +83,8 @@ test_that(paste("Evaluates construction and updating of simple blm with intercep
   
 })
 
-test_that("Evaluates construction and updating of simple blm with intercept to model without intercept using", {
+seed <- as.integer(1000 * rnorm(1))
+test_that("Evaluates construction and updating of simple blm with intercept to model without intercept using seed", seed), {
   w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
   x <- rnorm(50)
   y <- rnorm(50, w1 * x + w0, 1/b)
@@ -126,7 +127,7 @@ test_that(paste("Evaluates construction of polynomial models using seed", seed),
 
 
 seed <- as.integer(1000 * rnorm(1))
-test_that(paste("Evaluates models with 2 explanatory variables", seed), {
+test_that(paste("Evaluates models with 2 explanatory variables using seed", seed), {
   w0 <- 0.3 ; w1 <- 1.1 ; w2 <- 3.3 ; b <- 1.3
   x <- rnorm(50)
   z <- rnorm(50)
@@ -151,3 +152,21 @@ test_that(paste("Evaluates models with 2 explanatory variables", seed), {
   compare_blm(mod2,mod4)
 })
 
+
+seed <- as.integer(1000 * rnorm(1))
+test_that(paste("Evaluates updating when removing intercept from formula using", seed), {
+
+  w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
+  x <- rnorm(50)
+  y <- rnorm(50, w1 * x + w0, 1/b)
+  mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
+  
+  expect_message(update(mod, y~x+0, prior=mod$prior), "prior contains more variables than the model")
+  
+  new_mod <- blm(y~x+0, prior=mod$prior, beta=b)
+  new_mod2 <- update(mod, y~x+0, prior=mod$prior) 
+  new_mod3 <- update(mod, ~.+0, prior=mod$prior) 
+  
+  compare_blm(new_mod, new_mod2)
+  compare_blm(new_mod, new_mod3)
+})

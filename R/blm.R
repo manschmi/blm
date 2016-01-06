@@ -75,13 +75,14 @@ make_prior <- function(mean, alpha, dim = length(mean)){
 #' @return A object of class \code{blm}. An object of class "lm" is a list 
 #'   containing at least the following components: 
 #'   \itemize{
-#'     \item{call:      the matched call} 
-#'     \item{formula:   the formula used} 
-#'     \item{frame:     the model frame used} 
-#'     \item{matrix:    the model matrix used} 
-#'     \item{beta:      the precision of the data} 
-#'     \item{prior:     the prior distribution used} 
-#'     \item{posterior: the posterior distribution}
+#'     \item{call:        the matched call} 
+#'     \item{formula:     the formula used} 
+#'     \item{df.residual: the degrees of freedom of the model}
+#'     \item{frame:       the model frame used} 
+#'     \item{matrix:      the model matrix used} 
+#'     \item{beta:        the precision of the data} 
+#'     \item{prior:       the prior distribution used} 
+#'     \item{posterior:   the posterior distribution}
 #'   }
 #'   
 #' @examples
@@ -150,6 +151,7 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
                         formula = formula,
                         frame = frame,
                         matrix = matrix,
+                        df.residual = nrow(matrix) - ncol(matrix),
                         beta = beta,
                         prior = prior,
                         posterior = posterior),
@@ -509,6 +511,54 @@ residuals.blm <- function(object, ...){
 #' @export 
 deviance.blm <- function(object, ...){
   sum( resid(object)^2 )
+}
+
+
+
+
+#' Bayesian information criterion (BIC)
+#' 
+#' Bayesian information criterion (BIC) for the fit of a \code{blm} object.
+#' 
+#' @param object a \code{blm} object.
+#' @param ... other arguments (currently ignored).
+#' 
+#' @details Bayesian information criterion (BIC) of the \code{blm} object. 
+#'   \code{BIC} = n * ln(RSS/n) + k * ln(n). Where n is the number of 
+#'   observations, k is the number of free parameters to be estimated and RSS is
+#'   the residuals sum of squares (ie the \code{\link{deviance}}). When 
+#'   comparing 2 models the strength of the evidence against the model with the 
+#'   higher BIC value can be summarized as follows according to Wikipedia
+#'   (\url{https://en.wikipedia.org/wiki/Bayesian_information_criterion}):
+#'   \tabular{ll}{
+#'     ΔBIC \tab Evidence against higher BIC\cr
+#'     0-2 \tab Not worth more than a bare mention\cr
+#'     2-6 \tab Positive\cr
+#'     6-10 \tab Strong\cr
+#'     >10 \tab Very Strong\cr
+#'   }
+#' 
+#' @examples
+#' set.seed(1) x <- seq(-10,10,.1) b <- 1.3
+#' 
+#' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
+#' 
+#' y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) model <-
+#' blm(y ~ x + sin(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+#' 
+#' plot(model, xlim=c(-10,10)) bic(model) ## -1.582287
+#' 
+#' #another model removing the sinus term model2 <- blm(y ~ x, prior = NULL,
+#' beta = b, data = data.frame(x=x, y=y))
+#' 
+#' bic(model2) ## 785.2877
+#'   
+#' @export 
+bic <- function(object, ...){
+  k <- ncol(object$matrix)
+  n <- nrow(object$frame)
+  
+  n * log( deviance(object) / n ) + k * log(n)
 }
 
 
