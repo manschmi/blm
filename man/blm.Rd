@@ -21,13 +21,13 @@ object.}
 A object of class \code{blm}. An object of class "lm" is a list 
   containing at least the following components: 
   \itemize{
-   \item{call:      the matched call} 
-   \item{formula:   the formula used} 
-   \item{frame:     the model frame used} 
-   \item{matrix:    the model matrix used} 
-   \item{beta:      the precision of the data} 
-   \item{prior:     the prior distribution used} 
-   \item{posterior: the posterior distribution}
+    \item{call:      the matched call} 
+    \item{formula:   the formula used} 
+    \item{frame:     the model frame used} 
+    \item{matrix:    the model matrix used} 
+    \item{beta:      the precision of the data} 
+    \item{prior:     the prior distribution used} 
+    \item{posterior: the posterior distribution}
   }
 }
 \description{
@@ -40,27 +40,27 @@ Models for \code{blm} are provided as for \code{\link{lm}}. If prior
   are set to 0 and the variances to 1.
 }
 \examples{
- 
-   w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
-   x <- rnorm(50)
-   y <- rnorm(50, w1 * x + w0, 1/b)
-   mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
-   
-   summary(mod)
-   plot(mod)
-   
-   #use of a prior, typically from an existing model
-   x2 <- rnorm(50)
-   y2 <- rnorm(50, w1 * x2 + w0, 1/b)
-   mod <- blm(y~x, prior=mod, beta=b, data=data.frame(x=x2, y=y2))
-   mod
-   
-   #use with 2 explanatory variables
-   w2 <- 3.3
-   z <- rnorm(50)
-   y <- rnorm(50, w2 * z + w1 * x + w0, 1/b)
-   mod <- blm(y~x+z, beta=b, data=data.frame(x=x, y=y, z=z))
-   mod
+  w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3 
+  x <- rnorm(50)
+  y <- rnorm(50, w1 * x + w0, 1/b) 
+  mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
+  
+  summary(mod) 
+  
+  plot(mod)
+  
+  #use of a prior, typically from an existing model 
+  x2 <- rnorm(50) 
+  y2 <- rnorm(50, w1 * x2 + w0, 1/b) 
+  mod <- blm(y~x, prior=mod, beta=b, data=data.frame(x=x2, y=y2)) 
+  mod
+  
+  #use with 2 explanatory variables 
+  w2 <- 3.3 
+  z <- rnorm(50) 
+  y <- rnorm(50, w2 * z + w1 * x + w0, 1/b) 
+  mod <- blm(y~x+z, beta=b, data=data.frame(x=x,y=y, z=z)) 
+  mod
  
 }
 

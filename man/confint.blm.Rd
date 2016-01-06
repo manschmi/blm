@@ -9,15 +9,18 @@
 \arguments{
 \item{object}{a \code{blm} object.}
 
-\item{parm}{parameter for which confidence interval should be computed. Either a number or vector of numbers. If missig all parameters are considered.}
+\item{parm}{parameter for which confidence interval should be computed.
+Either a number or vector of numbers. If missig all parameters are
+considered.}
 
 \item{level}{confidence level}
 
 \item{...}{other arguments (currently ignored).}
 }
 \value{
-Pseudo confidence interval of parameter(s) of the \code{blm} object.
-Returns the quantile specified by level for the distribution of \code{param}.
+Pseudo confidence interval of parameter(s) of the \code{blm} object. 
+  Returns the quantile specified by level for the distribution of
+  \code{param}.
 }
 \description{
 Compute the confidence interval \code{\link{confint}} for a bayesian linear
@@ -28,15 +31,15 @@ Deviance is the sum of squares of the residuals, extracted from the
  maxium a posterior estimate of the \code{blm} object.
 }
 \examples{
-x <- rnorm(10)
-b <- 1.3
-w0 <- 0.2 ; w1 <- 3
-y <- rnorm(10, mean = w0 + w1 * x, sd = sqrt(1/b))
-model <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
-
-confint(model)
-confint(model, 1)
-confint(model, c(1,2))
+  x <- rnorm(10)
+  b <- 1.3
+  w0 <- 0.2 ; w1 <- 3
+  y <- rnorm(10, mean = w0 + w1 * x, sd = sqrt(1/b))
+  model <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
+  
+  confint(model)
+  confint(model, 1)
+  confint(model, c(1,2))
 
 }
 

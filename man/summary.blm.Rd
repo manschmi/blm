@@ -13,10 +13,10 @@
 }
 \value{
 An object of class \code{summary.blm} containing:
- \describe{
-  \item{call}{the call of the object }
-  \item{prior}{the prior distribution of the fit}
-  \item{posterior}{the posterior distribution of the fit}
+  \describe{
+    \item{call}{the call of the object }
+    \item{prior}{the prior distribution of the fit}
+    \item{posterior}{the posterior distribution of the fit}
  }
 }
 \description{

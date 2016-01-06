@@ -14,22 +14,22 @@
 \item{...}{other arguments (currently ignored).}
 }
 \value{
-A vector of fitted values. If report.var = TRUE, a list containing
- means and variances of the fitted values. Identical to \code{predict.blm}
- without newdata.
+A vector of fitted values. If report.var = TRUE, a list containing 
+  means and variances of the fitted values. Identical to \code{predict.blm} 
+  without newdata.
 }
 \description{
 Extracts the fitted values for the response variable of a \code{\link{blm}}
- object.
+  object.
 }
 \examples{
-x <- rnorm(10)
-b <- 1.3
-w0 <- 0.2 ; w1 <- 3
-y <- rnorm(10, mean = w0 + w1 * x, sd = sqrt(1/b))
-model <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
-
-fitted(model)
-
+  x <- rnorm(10)
+  b <- 1.3
+  w0 <- 0.2 ; w1 <- 3
+  y <- rnorm(10, mean = w0 + w1 * x, sd = sqrt(1/b))
+  model <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
+  
+  fitted(model)
+  
 }
 

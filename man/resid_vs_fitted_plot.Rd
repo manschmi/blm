@@ -28,6 +28,6 @@ Plots residuals against fitted values for a \code{\link{blm}} object.
 }
 \details{
 Standard deviation of the residuals is same as for the fitted
- values.
+  values.
 }
 

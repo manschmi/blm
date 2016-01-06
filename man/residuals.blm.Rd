@@ -20,17 +20,17 @@ Residuals of the \code{blm} object.
 }
 \details{
 Residuals are extracted from the maxium a posterior estimate of the 
- \code{blm} object.
+  \code{blm} object.
 }
 \examples{
-x <- rnorm(10)
-b <- 1.3
-w0 <- 0.2 ; w1 <- 3
-y <- rnorm(10, mean = w0 + w1 * x, sd = sqrt(1/b))
-model <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
-
-residuals(model)
-resid(model)
-
+  x <- rnorm(10)
+  b <- 1.3
+  w0 <- 0.2 ; w1 <- 3
+  y <- rnorm(10, mean = w0 + w1 * x, sd = sqrt(1/b))
+  model <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
+  
+  residuals(model)
+  resid(model)
+  
 }
 

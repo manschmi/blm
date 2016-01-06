@@ -37,31 +37,32 @@ Updates a \code{\link{blm}} object, using features of the input
   \code{\link{update}}.
 }
 \examples{
-   w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
-   x <- rnorm(50)
-   y <- rnorm(50, w1 * x + w0, 1/b)
-   mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
-   mod
-   
-   #use of a prior, typically from an existing model
-   x2 <- rnorm(50)
-   y2 <- rnorm(50, w1 * x2 + w0, 1/b)
-   
-   #using posterior of mod as prior
-   new_mod <- update(mod, data=data.frame(x=x2, y=y2)) 
-   new_mod
-   
-   #using same prior for mod and new model
-   new_mod2 <- update(mod, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
-   new_mod2
-   
-   #update model formula
-   new_mod2 <- update(mod, y~x+0, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
-   new_mod2
-   
-   #also works with R formula update semantics
-   new_mod2 <- update(mod, ~.+0, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
-   new_mod2
+  w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3 
+  x <- rnorm(50) 
+  y <- rnorm(50, w1 * x + w0, 1/b) 
+  mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y)) 
+  mod
+  
+  #use of a prior, typically from an existing model 
+  x2 <- rnorm(50) 
+  y2 <- rnorm(50, w1 * x2 + w0, 1/b)
+  
+  #using posterior of mod as prior 
+  new_mod <- update(mod, data=data.frame(x=x2, y=y2)) 
+  new_mod
+  
+  #using same prior for mod and new model 
+  new_mod2 <- update(mod, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
+  new_mod2
+  
+  #update model formula 
+  new_mod2 <- update(mod, y~x+0, prior=mod$prior, 
+                     data=data.frame(x=x2, y=y2)) 
+  new_mod2
+  
+  #also works with standard R formula update semantics 
+  new_mod2 <- update(mod, ~.+0, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
+  new_mod2
    
 
 }

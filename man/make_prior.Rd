@@ -28,9 +28,9 @@ Creates a multivariate normal distribution object of class
   distribution.
 }
 \examples{
- make_prior(0,1,2)
+  make_prior(0,1,2)
  
- make_prior(c(0,1),c(1,2))
+  make_prior(c(0,1),c(1,2))
  
 }
 

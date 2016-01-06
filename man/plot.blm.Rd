@@ -55,17 +55,20 @@ Plots the blm object along with the MAP fit line and quantiles for the fit.
 \details{
 Plots the data points used to create the \code{\link{blm}} object, 
   together with the blm fit, 95% quanitle of the blm fit and the 
-  (frequentist) lm fit. \itemize{ \item \code{explanatory} can be used to 
-  specify what parameter is to be plotted on the x axis. This can be useful 
-  ie when plotting models without a 'pure' explanatory ie y~sin(x); where
-  untransformed 'x' itself is not part of the model. Providing
-  \code{explanatory = 'x'} will produce the correct output for such models.
-  \item \code{expand_fit} shows fit lines and extend to plot limits,
-  otherwise the fit is only shown for the range covered by the data. \item
-  \code{fit_legend_param} a list (of lists) of parameters to customize the
-  legend. The first item in each slot targets the lm fit line (if present),
-  the second paramter the blm fit line and the third paramter the interval
-  lines for the blm fit.}
+  (frequentist) lm fit. 
+  \itemize{ 
+    \item \code{explanatory} can be used to specify what parameter is to be 
+      plotted on the x axis. This can be useful ie when plotting models
+      without a 'pure' explanatory ie y~sin(x); where untransformed 'x'
+      itself is not part of the model. Providing \code{explanatory = 'x'}
+      will produce the correct output for such models.
+    \item \code{expand_fit} shows fit lines and extend to plot limits, 
+      otherwise the fit is only shown for the range covered by the data. 
+    \item \code{fit_legend_param} a list (of lists) of parameters to
+     customize the legend. The first item in each slot targets the lm fit
+     line (if present), the second paramter the blm fit line and the third
+     paramter the interval lines for the blm fit.
+  }
 }
 \examples{
 x <- rnorm(100)
