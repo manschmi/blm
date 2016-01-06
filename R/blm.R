@@ -796,8 +796,11 @@ plot.blm <- function(x, explanatory = NULL,
 #'   
 #' @details Standard deviation of the residuals is same as for the fitted
 #'  values.
-resid_vs_fitted_plot <- function(object, show_var=FALSE, 
-                                 id.n = 3, labels.id = names(residuals(object)), cex.id = 0.75,
+resid_vs_fitted_plot <- function(object, 
+                                 show_var=FALSE, 
+                                 id.n = 3, 
+                                 labels.id = names(residuals(object)), 
+                                 cex.id = 0.75,
                                  ...) {
   fits <- fitted(object, report.var = T)
   y <- resid(object)
@@ -832,13 +835,22 @@ resid_vs_fitted_plot <- function(object, show_var=FALSE,
 #' Scale-Location Plot for a \code{\link{blm}} object.
 #' 
 #' @param object a \code{\link{blm}} object.
+#' @param id.n number of points to be labelled in each plot, starting with the
+#'   most extreme.
+#' @param labels.id  vector of labels, from which the labels for extreme points
+#'   will be chosen. NULL uses observation numbers.
+#' @param cex.id  magnification of point labels.
 #' @param ... other arguments passed to plot.
 #'   
 #' @details Scale-location plots the sqrt(| residuals |) against fitted values.
 #'   This is supposed to diminish skewness. Note: In contrast to the
 #'   \code{\link{plot.lm}} implementation, the residuals here are taken for
 #'   sqrt(| residuals |) and not the standardized residuals.
-scale_location_plot <- function(object, ...) {
+scale_location_plot <- function(object,                                  
+                                id.n = 3, 
+                                labels.id = names(residuals(object)), 
+                                cex.id = 0.75,
+                                ...) {
   x <- fitted(object, report.var = FALSE)
   y <- sqrt(abs(resid(object)))
   plot(y~x, 
@@ -847,6 +859,11 @@ scale_location_plot <- function(object, ...) {
                     deparse(object$formula),sep=''),
        ylab = expression(sqrt(abs(Residuals))),
        ...)
+  
+  if (id.n > 0) {
+    ids <- order(y, decreasing = TRUE)[1:id.n]
+    text(y[ids]~x[ids], label=labels.id[ids], cex=cex.id, adj=-.5)
+  }
   
 }
 
