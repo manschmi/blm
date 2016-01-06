@@ -601,6 +601,8 @@ print.summary.blm <- function(x, ...){
 #' @param show_lm display the regular lm fit on the plot?
 #' @param lm_col color for the lm fit line.
 #' @param lm_lty linetype for the lm fit line.
+#' @param caption title to be added to the plot.
+#' @param add_formula append formula to the caption.
 #' @param show_legend add a legend for the fit lines to the plot?
 #' @param legend_parm list of additional arguments for the legend.
 #' @param xlab label for the x axis.
@@ -681,12 +683,15 @@ plot.blm <- function(x, explanatory = NULL,
                      blm_interval_lty=2,
                      show_lm=TRUE, 
                      lm_col='red', 
-                     lm_lty=2, 
+                     lm_lty=2,
+                     caption='Bayesian lm fit',
+                     add_formula=TRUE,
                      show_legend=TRUE, 
                      legend_parm=NULL,
                      xlab, ylab, ...){
   
-  object <- x #want to keep argument name x to be consistent with generic fun
+  #want to keep argument name x to be consistent with generic fun
+  object <- x
   
   if ( missing(explanatory)) {
     #take the first term of the formula per default
@@ -702,8 +707,13 @@ plot.blm <- function(x, explanatory = NULL,
   
   if (missing('xlab')) xlab <- explanatory
   if (missing('ylab')) ylab <- response_lab
+  caption <- ifelse(add_formula, 
+                    paste(caption, deparse(object$formula), sep='\n'),
+                    NULL)
   
-  plot(x, response, xlab=xlab, ylab=ylab, ...)
+  plot(x, response, 
+       main=caption,
+       xlab=xlab, ylab=ylab, ...)
   
   if ( expand_fit ) {
     plot_lims <- par('usr')[1:2]
@@ -777,12 +787,18 @@ plot.blm <- function(x, explanatory = NULL,
 #' @param object a \code{\link{blm}} object.
 #' @param show_var display errorbars showing standard deviation on the 
 #'   residuals.
+#' @param id.n number of points to be labelled in each plot, starting with the
+#'   most extreme.
+#' @param labels.id  vector of labels, from which the labels for extreme points
+#'   will be chosen. NULL uses observation numbers.
+#' @param cex.id  magnification of point labels.
 #' @param ... other arguments passed to plot.
 #'   
-#' @detail Standard deviation of the residuals is same as for the fitted
+#' @details Standard deviation of the residuals is same as for the fitted
 #'  values.
-#'
-resid_vs_fitted_plot <- function(object, show_var=FALSE, ...) {
+resid_vs_fitted_plot <- function(object, show_var=FALSE, 
+                                 id.n = 3, labels.id = names(residuals(object)), cex.id = 0.75,
+                                 ...) {
   fits <- fitted(object, report.var = T)
   y <- resid(object)
   x <- fits$mean
@@ -792,6 +808,12 @@ resid_vs_fitted_plot <- function(object, show_var=FALSE, ...) {
                     deparse(object$formula),sep=''),
        ylab = 'Residuals',
        ...)
+  
+  if (id.n > 0) {
+    ids <- order(abs(y), decreasing = TRUE)[1:id.n]
+    text(y[ids]~x[ids], label=labels.id[ids], cex=cex.id, adj=-.5)
+  }
+ 
   
   if (show_var) {
     sd <- sqrt(fits$var)
@@ -811,8 +833,10 @@ resid_vs_fitted_plot <- function(object, show_var=FALSE, ...) {
 #' @param object a \code{\link{blm}} object.
 #' @param ... other arguments passed to plot.
 #'   
-#' @detail Scale-location plots the sqrt(| residuals |) against fitted values. This is supposed to diminish skewness. Note: In contrast to the \code{\link{plot.lm}} implementation, the residuals here are taken for sqrt(| residuals |) and not the standardized residuals.
-#'
+#' @details Scale-location plots the sqrt(| residuals |) against fitted values.
+#'   This is supposed to diminish skewness. Note: In contrast to the
+#'   \code{\link{plot.lm}} implementation, the residuals here are taken for
+#'   sqrt(| residuals |) and not the standardized residuals.
 scale_location_plot <- function(object, ...) {
   x <- fitted(object, report.var = FALSE)
   y <- sqrt(abs(resid(object)))
@@ -834,8 +858,11 @@ scale_location_plot <- function(object, ...) {
 #' @param qqline add qqline to the plot.
 #' @param ... other arguments passed to qqplot.
 #'   
-#' @detail Q-Q plots the sqrt(| residuals |) against fitted values. This transformation of the residuals is supposed to diminish skewness (see \code{\link{plot.lm}}. Note: In contrast to the \code{\link{plot.lm}} implementation, the residuals here are taken for sqrt(| residuals |) and not the standardized residuals.
-#'
+#' @details Q-Q plots the sqrt(| residuals |) against fitted values. This
+#'   transformation of the residuals is supposed to diminish skewness (see
+#'   \code{\link{plot.lm}}. Note: In contrast to the \code{\link{plot.lm}}
+#'   implementation, the residuals here are taken for sqrt(| residuals |) and
+#'   not the standardized residuals.
 qq_blm_plot <- function(object, qqline=TRUE, ...) {
   x <- fitted(object, report.var = FALSE)
   y <- resid(object)

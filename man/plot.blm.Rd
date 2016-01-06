@@ -7,7 +7,8 @@
 \method{plot}{blm}(x, explanatory = NULL, show_blm_interval = TRUE,
   blm_interval_level = 0.95, expand_fit = TRUE, blm_col = "blue",
   blm_map_lty = 1, blm_interval_lty = 2, show_lm = TRUE, lm_col = "red",
-  lm_lty = 2, show_legend = TRUE, legend_parm = NULL, xlab, ylab, ...)
+  lm_lty = 2, caption = "Bayesian lm fit", add.formula = TRUE,
+  show_legend = TRUE, legend_parm = NULL, xlab, ylab, ...)
 }
 \arguments{
 \item{x}{a blm object.}
