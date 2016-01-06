@@ -826,6 +826,7 @@ resid_vs_fitted_plot <- function(object, show_var=FALSE,
 }
 
 
+
 #' Scale-Location Plot
 #' 
 #' Scale-Location Plot for a \code{\link{blm}} object.
