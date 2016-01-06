@@ -4,10 +4,19 @@
 \alias{scale_location_plot}
 \title{Scale-Location Plot}
 \usage{
-scale_location_plot(object, ...)
+scale_location_plot(object, id.n = 3, labels.id = names(residuals(object)),
+  cex.id = 0.75, ...)
 }
 \arguments{
 \item{object}{a \code{\link{blm}} object.}
+
+\item{id.n}{number of points to be labelled in each plot, starting with the
+most extreme.}
+
+\item{labels.id}{vector of labels, from which the labels for extreme points
+will be chosen. NULL uses observation numbers.}
+
+\item{cex.id}{magnification of point labels.}
 
 \item{...}{other arguments passed to plot.}
 }

@@ -611,11 +611,17 @@ print.summary.blm <- function(x, ...){
 #' 
 #' @details Plots the data points used to create the \code{\link{blm}} object, 
 #'   together with the blm fit, 95% quanitle of the blm fit and the 
-#'   (frequentist) lm fit. \itemize{ \item \code{explanatory} can be used to
-#'   specify what parameter is to be plotted on the x axis. This can be useful
-#'   ie when plotting models with a 'pure' explanatory ie y~sin(x); where 'x' is
-#'   not part of the model. \item providing \code{explanatory = 'x'} will
-#'   produce the correct output for such models. \item \code{expand_fit} shows fit lines and extend to plot limits, otherwise the fit is only shown for the range covered by the data. \item \code{fit_legend_param} a list (of lists) of parameters to customize the legend. The first item in each slot targets the lm fit line (if present), the second paramter the blm fit line and the third paramter the interval lines for the blm fit.}
+#'   (frequentist) lm fit. \itemize{ \item \code{explanatory} can be used to 
+#'   specify what parameter is to be plotted on the x axis. This can be useful 
+#'   ie when plotting models without a 'pure' explanatory ie y~sin(x); where
+#'   untransformed 'x' itself is not part of the model. Providing
+#'   \code{explanatory = 'x'} will produce the correct output for such models.
+#'   \item \code{expand_fit} shows fit lines and extend to plot limits,
+#'   otherwise the fit is only shown for the range covered by the data. \item
+#'   \code{fit_legend_param} a list (of lists) of parameters to customize the
+#'   legend. The first item in each slot targets the lm fit line (if present),
+#'   the second paramter the blm fit line and the third paramter the interval
+#'   lines for the blm fit.}
 #'   
 #' @examples
 #' x <- rnorm(100)
@@ -816,7 +822,6 @@ resid_vs_fitted_plot <- function(object,
     ids <- order(abs(y), decreasing = TRUE)[1:id.n]
     text(y[ids]~x[ids], label=labels.id[ids], cex=cex.id, adj=-.5)
   }
- 
   
   if (show_var) {
     sd <- sqrt(fits$var)
@@ -892,5 +897,60 @@ qq_blm_plot <- function(object, qqline=TRUE, ...) {
          ylab = 'Residuals',
          ...)
   if (qqline) qqline(x)
+  
+}
+
+
+
+#' Diagnostic Plots
+#' 
+#' Diagnostic plots for a \code{\link{blm}} object.
+#' 
+#' @param object a \code{\link{blm}} object.
+#' @param which subset of the plots to display.
+#' @param show_var display errorbars showing standard deviation on the 
+#'   residuals vs fitted plot.
+#' @param id.n number of points to be labelled in each plot, starting with the
+#'   most extreme. Applies to plots 1 and 2.
+#' @param labels.id  vector of labels, from which the labels for extreme points
+#'   will be chosen. NULL uses observation numbers. Applies to plots 1 and 2.
+#' @param cex.id  magnification of point labels. Applies to plots 1 and 2.
+#' @param qqline add qqline to the Q-Q plot.
+#' @param ... other arguments passed to the plot functions.
+#'   
+#' @details The following plots are available: 
+#'  \enumerate{ 
+#'    \item \code{\link{resid_vs_fitted_plot}} 
+#'    \item \code{\link{scale_location_plot}} 
+#'    \item \code{\link{qq_blm_plot}}
+#'  }
+#'  
+#' @export
+diagnostic_plots <- function(object, 
+                             which = c(1:3),
+                             show_var = FALSE, 
+                             id.n = 3, 
+                             labels.id = names(residuals(object)), 
+                             cex.id = 0.75,
+                             qqline = TRUE, ...) {
+
+  if ( !('blm' %in% class(object)) ) {
+    stop('function needs an class blm object')
+  }
+  
+  if ( 1 %in% which) {
+    resid_vs_fitted_plot(object, show_var=show_var, 
+                         id.n=id.n, labels.id=labels.id, 
+                         cex.id=cex.id, ...)
+  }
+  
+  if ( 2 %in% which) {
+    scale_location_plot(object, id.n=id.n, labels.id=labels.id, 
+                      cex.id=cex.id, ...)
+  }
+  
+  if ( 3 %in% which) {
+    qq_blm_plot(object, qqline=qqline, ...)
+  }
   
 }

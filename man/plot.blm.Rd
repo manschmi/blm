@@ -7,7 +7,7 @@
 \method{plot}{blm}(x, explanatory = NULL, show_blm_interval = TRUE,
   blm_interval_level = 0.95, expand_fit = TRUE, blm_col = "blue",
   blm_map_lty = 1, blm_interval_lty = 2, show_lm = TRUE, lm_col = "red",
-  lm_lty = 2, caption = "Bayesian lm fit", add.formula = TRUE,
+  lm_lty = 2, caption = "Bayesian lm fit", add_formula = TRUE,
   show_legend = TRUE, legend_parm = NULL, xlab, ylab, ...)
 }
 \arguments{
@@ -35,6 +35,10 @@ response to be shown.}
 
 \item{lm_lty}{linetype for the lm fit line.}
 
+\item{caption}{title to be added to the plot.}
+
+\item{add_formula}{append formula to the caption.}
+
 \item{show_legend}{add a legend for the fit lines to the plot?}
 
 \item{legend_parm}{list of additional arguments for the legend.}
@@ -51,11 +55,17 @@ Plots the blm object along with the MAP fit line and quantiles for the fit.
 \details{
 Plots the data points used to create the \code{\link{blm}} object, 
   together with the blm fit, 95% quanitle of the blm fit and the 
-  (frequentist) lm fit. \itemize{ \item \code{explanatory} can be used to
-  specify what parameter is to be plotted on the x axis. This can be useful
-  ie when plotting models with a 'pure' explanatory ie y~sin(x); where 'x' is
-  not part of the model. \item providing \code{explanatory = 'x'} will
-  produce the correct output for such models. \item \code{expand_fit} shows fit lines and extend to plot limits, otherwise the fit is only shown for the range covered by the data. \item \code{fit_legend_param} a list (of lists) of parameters to customize the legend. The first item in each slot targets the lm fit line (if present), the second paramter the blm fit line and the third paramter the interval lines for the blm fit.}
+  (frequentist) lm fit. \itemize{ \item \code{explanatory} can be used to 
+  specify what parameter is to be plotted on the x axis. This can be useful 
+  ie when plotting models without a 'pure' explanatory ie y~sin(x); where
+  untransformed 'x' itself is not part of the model. Providing
+  \code{explanatory = 'x'} will produce the correct output for such models.
+  \item \code{expand_fit} shows fit lines and extend to plot limits,
+  otherwise the fit is only shown for the range covered by the data. \item
+  \code{fit_legend_param} a list (of lists) of parameters to customize the
+  legend. The first item in each slot targets the lm fit line (if present),
+  the second paramter the blm fit line and the third paramter the interval
+  lines for the blm fit.}
 }
 \examples{
 x <- rnorm(100)
