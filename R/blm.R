@@ -109,7 +109,7 @@ make_prior <- function(mean, alpha, dim = length(mean)){
 #'   mod
 #'  
 #' @export
-blm <- function(formula, prior = NULL, beta = 1, ...) {
+blm <- function(formula, prior = NULL, beta = NULL, ...) {
   
   frame <- model.frame(as.formula(formula), ...)
   matrix <- model.matrix(as.formula(formula), frame)
@@ -135,19 +135,19 @@ blm <- function(formula, prior = NULL, beta = 1, ...) {
     }
   }
   
+  prior_means <- mv_dist.means(prior)
   prior_covar <- mv_dist.covar(prior)
   
   response <- model.response(frame)
   
-  lhd_term <- beta * t(matrix) %*% matrix
+  covar <- solve(prior_covar + t(matrix) %*% matrix)
   
-  covar <- solve(prior_covar + lhd_term)
-  
-  means <- beta * covar %*% t(matrix) %*%  response
+  means <- covar %*% 
+    drop(prior_means %*% prior_covar + t(t(matrix) %*% matrix(response,ncol=1)))
   
   posterior <- distribution(mv_dist(means, covar))
   
-  mod <- structure(list(call = match.call(),
+  structure(list(call = match.call(),
                         formula = formula,
                         frame = frame,
                         matrix = matrix,
@@ -372,10 +372,10 @@ confint.blm <- function (object,
 #'   means and variances of the predicted values.
 #'  
 #' @examples
-#'   x <- rnorm(10)
+#'   x <- rnorm(100)
 #'   b <- 1.3
 #'   w0 <- 0.2 ; w1 <- 3
-#'   y <- rnorm(10, mean = w0 + w1 * x, sd = sqrt(1/b))
+#'   y <- rnorm(100, mean = w0 + w1 * x, sd = sqrt(1/b))
 #'   model <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
 #'   
 #'   predict(model)
@@ -396,14 +396,84 @@ predict.blm <- function(object, newdata = NULL, report.var = FALSE, ...){
   
   means <- apply(matrix, 1, function(xi) sum(coef(object) * xi))
   
-  if (report.var) {
+  if (report.var) { 
+    if (is.null(object$beta)) {
+      error_var(object)
+    } else {
+      var <- 1/object$beta
+    }
+    
     vars <- apply(matrix, 1, function(xi) 
-      1/object$beta +  t(xi) %*% covar.blm(object) %*% xi)
+      var +  t(xi) %*% covar.blm(object) %*% xi)
     
     return(list(mean = means, var = vars))
   }
   
   means
+}
+
+
+
+#' Variance of the Error 
+#' 
+#' Variance of the error of a (bayesian) linear regression model.
+#' 
+#' @details Simply \code{deviance/df}. Required to compute the distribution of
+#'   fitted values.
+error_var <- function(object){
+  n <- nrow(object$matrix)
+  p <- ncol(object$matrix)
+  deviance(object)/(n-p)
+}
+
+
+
+#' Variance of the Error 
+#' 
+#' Variance of the error of a (bayesian) linear regression model.
+#' 
+#' @param object a \code{\link{blm}} object.
+#' 
+#' @details Simply \code{deviance/df}. Required to compute the distribution of
+#'   fitted values.
+error_var <- function(object){
+  n <- nrow(object$matrix)
+  p <- ncol(object$matrix)
+  deviance(object)/(n-p)
+}
+
+
+
+#' Probability of Response 
+#' 
+#' Probability of observing the response given a (bayesian) linear regression model.
+#' 
+#' @param object a \code{\link{blm}} object.
+#' 
+#' @details Computes as described in \url{https://en.wikipedia.org/wiki/Bayesian_linear_regression}.
+pY <- function(object, prior_mean = 1, prior_var = 1){
+  a_prior <- prior_mean/2
+  b_prior <- (prior_mean * prior_var)/2
+  
+  resp <- model.response(object$frame)
+  
+  mu_prior <- object$prior$means
+  cov_prior <- object$prior$covar
+  
+  mu_post <- object$posterior$means
+  cov_post <- object$posterior$covar
+  
+  n <- nrow(object$matrix)
+  
+  a_post <- a_prior + n/2
+  b_post <- b_prior + 0.5*( t(resp)%*%resp + 
+                                  t(mu_prior) %*% cov_prior %*% mu_prior -
+                                  t(mu_post) %*% cov_post %*% mu_post )
+  
+  1/((2*pi)^(n/2)) * 
+    sqrt( det(cov_prior)/det(cov_post) ) * 
+    (b_prior^a_prior) / (b_post^a_post) *
+    gamma(a_post) / gamma(a_prior)
 }
 
 
@@ -436,7 +506,7 @@ fitted.blm <- function(object, report.var = FALSE, ...){
   responseless_formula <- delete.response(terms(object$formula))
   matrix <- model.matrix(responseless_formula, object$frame)    
   
-  means <- apply(matrix, 1, function(xi) sum(coef(object) * xi))
+  means <- drop(matrix %*% coef(object))
   
   if (report.var) {
     vars <- apply(matrix, 1, function(xi) 
@@ -539,17 +609,20 @@ deviance.blm <- function(object, ...){
 #'   }
 #' 
 #' @examples
-#' set.seed(1) x <- seq(-10,10,.1) b <- 1.3
+#' set.seed(1) 
+#' x <- seq(-10,10,.1) 
+#' b <- 3
 #' 
 #' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
 #' 
-#' y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) model <-
-#' blm(y ~ x + sin(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+#' y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
+#' model <- blm(y ~ x + sin(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
 #' 
-#' plot(model, xlim=c(-10,10)) bic(model) ## -1.582287
+#' plot(model, xlim=c(-10,10)) 
+#' bic(model) ## -1.582287
 #' 
-#' #another model removing the sinus term model2 <- blm(y ~ x, prior = NULL,
-#' beta = b, data = data.frame(x=x, y=y))
+#' #another model removing the sinus term 
+#' model2 <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
 #' 
 #' bic(model2) ## 785.2877
 #'   
