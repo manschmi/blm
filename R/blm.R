@@ -478,6 +478,32 @@ pY <- function(object, prior_mean = 1, prior_var = 1){
 
 
 
+#' Bayes Factor
+#' 
+#'  Computes the Bayes factor for comparison of 2 \code{\link{blm}} objects.
+#'  
+#'  @param model1 first \code{blm} object
+#'  @param model2 second \code{blm} object
+#'  
+#'  @details Returns the ratio of the probability of model1 divided by the probability of model2. A value of K > 1 means that M1 is more strongly supported by the data under consideration than M2 (\url{https://en.wikipedia.org/wiki/Bayes_factor}). Wikipedia mentions additional scales for interpretation, ie by Harold Jeffreys: 
+#'    \itemize{
+#'      \item K < 1: supports model2
+#'      \item K > 10: strong support for model1
+#'      \item K > 100: decisive support for model1
+#'    }.
+#'  An alternative table, widely cited, is provided by Kass and Raftery:
+#'    \itemize{
+#'      \item K 1-3: not worth more than a bare mention
+#'      \item K 3-20: positive support for model1
+#'      \item K 20-150: strong support for model1
+#'      \item K >150: strong support for model1
+#'    }.
+#' 
+bayes_factor <- function(model1, model2) {
+  pY(model1) / pY(model2)
+}
+
+
 #' Extract Model Fitted Values 
 #' 
 #' Extracts the fitted values for the response variable of a \code{\link{blm}}
