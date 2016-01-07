@@ -451,6 +451,8 @@ error_var <- function(object){
 #' @param object a \code{\link{blm}} object.
 #' 
 #' @details Computes as described in \url{https://en.wikipedia.org/wiki/Bayesian_linear_regression}.
+#' 
+#' @export
 pY <- function(object, prior_mean = 1, prior_var = 1){
   a_prior <- prior_mean/2
   b_prior <- (prior_mean * prior_var)/2
@@ -499,6 +501,7 @@ pY <- function(object, prior_mean = 1, prior_var = 1){
 #'      \item K >150: strong support for model1
 #'    }.
 #' 
+#' @export
 bayes_factor <- function(model1, model2) {
   pY(model1) / pY(model2)
 }
