@@ -89,61 +89,72 @@ make_prior <- function(mean, alpha, dim = length(mean)){
 #'   w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3 
 #'   x <- rnorm(50)
 #'   y <- rnorm(50, w1 * x + w0, 1/b) 
-#'   mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
-#'   
-#'   summary(mod) 
-#'   
+#'   mod <- blm(y~x, data=data.frame(x=x, y=y))
+#'   mod
 #'   plot(mod)
+#'   
+#'   #use with known precision
+#'   mod_det <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
+#'   mod_det
 #'   
 #'   #use of a prior, typically from an existing model 
 #'   x2 <- rnorm(50) 
 #'   y2 <- rnorm(50, w1 * x2 + w0, 1/b) 
-#'   mod <- blm(y~x, prior=mod, beta=b, data=data.frame(x=x2, y=y2)) 
-#'   mod
+#'   mod2 <- blm(y~x, prior=mod, data=data.frame(x=x2, y=y2)) 
+#'   mod2
 #'   
 #'   #use with 2 explanatory variables 
 #'   w2 <- 3.3 
 #'   z <- rnorm(50) 
 #'   y <- rnorm(50, w2 * z + w1 * x + w0, 1/b) 
-#'   mod <- blm(y~x+z, beta=b, data=data.frame(x=x,y=y, z=z)) 
+#'   mod <- blm(y~x+z, data=data.frame(x=x, y=y, z=z)) 
 #'   mod
 #'  
 #' @export
-blm <- function(formula, prior = NULL, beta = NULL, ...) {
+blm <- function(formula, prior = NULL, beta, ...) {
   
   frame <- model.frame(as.formula(formula), ...)
   matrix <- model.matrix(as.formula(formula), frame)
-  mod_vars <- colnames(matrix)
+  df <- nrow(matrix) - ncol(matrix)
+  response <- model.response(frame)
+  coef_names <- colnames(matrix)
   
   if (is.null(prior)) {
     n <- ncol(matrix)
     prior <- make_prior(mean = 0, alpha = 1, dim = n)
-    prior <- mv_dist.set_var_names(prior, mod_vars)
+    prior <- mv_dist.set_var_names(prior, coef_names)
   }
   
   prior <- distribution(prior)
   
-  prior_vars <- mv_dist.var_names(prior)
-  if ( length(prior_vars) != length(mod_vars) & !all(prior_vars %in% mod_vars) ) {
+  prior_names <- mv_dist.var_names(prior)
+  if ( length(prior_names) != length(coef_names) & !all(prior_names %in% coef_names) ) {
     #can occur ie when updating to a new formula with fewer terms
-    if ( all(mod_vars %in% prior_vars) ){
+    if ( all(coef_names %in% prior_names) ){
       message('prior contains more variables than the model : variables not used in the model are ignored in the fit')
       prior <- mv_dist.subset(prior, colnames(matrix))
     } else {
-      missing <- mod_vars[!(mod_vars %in% prior_vars)]
+      missing <- coef_names[!(coef_names %in% prior_names)]
       stop(paste('model formula contains variable names not provided in the prior', missing ))
     }
   }
   
   prior_means <- mv_dist.means(prior)
   prior_covar <- mv_dist.covar(prior)
+  prior_precision <- solve(prior_covar)
   
-  response <- model.response(frame)
-  
-  covar <- solve(prior_covar + t(matrix) %*% matrix)
-  
-  means <- covar %*% 
-    drop(prior_means %*% prior_covar + t(t(matrix) %*% matrix(response,ncol=1)))
+  if (missing(beta)) {
+    covar <- solve( prior_precision + t(matrix) %*% matrix )
+    
+    means <- covar %*% 
+      drop(prior_precision %*% prior_means + 
+             t(matrix) %*% matrix(response,ncol=1))
+    
+    beta <- 1/(sum((response - drop(matrix %*% means))^2)/df)
+  } else {
+    covar <- solve(prior_covar + beta * t(matrix) %*% matrix)
+    means <- beta * covar %*% t(matrix) %*% response
+  }
   
   posterior <- distribution(mv_dist(means, covar))
   
@@ -151,7 +162,7 @@ blm <- function(formula, prior = NULL, beta = NULL, ...) {
                         formula = formula,
                         frame = frame,
                         matrix = matrix,
-                        df.residual = nrow(matrix) - ncol(matrix),
+                        df.residual = df,
                         beta = beta,
                         prior = prior,
                         posterior = posterior),
@@ -397,14 +408,10 @@ predict.blm <- function(object, newdata = NULL, report.var = FALSE, ...){
   means <- apply(matrix, 1, function(xi) sum(coef(object) * xi))
   
   if (report.var) { 
-    if (is.null(object$beta)) {
-      error_var(object)
-    } else {
-      var <- 1/object$beta
-    }
+    error_var <- 1/object$beta
     
     vars <- apply(matrix, 1, function(xi) 
-      var +  t(xi) %*% covar.blm(object) %*% xi)
+      error_var +  t(xi) %*% covar.blm(object) %*% xi)
     
     return(list(mean = means, var = vars))
   }
@@ -414,48 +421,23 @@ predict.blm <- function(object, newdata = NULL, report.var = FALSE, ...){
 
 
 
-#' Variance of the Error 
-#' 
-#' Variance of the error of a (bayesian) linear regression model.
-#' 
-#' @details Simply \code{deviance/df}. Required to compute the distribution of
-#'   fitted values.
-error_var <- function(object){
-  n <- nrow(object$matrix)
-  p <- ncol(object$matrix)
-  deviance(object)/(n-p)
-}
-
-
-
-#' Variance of the Error 
-#' 
-#' Variance of the error of a (bayesian) linear regression model.
-#' 
-#' @param object a \code{\link{blm}} object.
-#' 
-#' @details Simply \code{deviance/df}. Required to compute the distribution of
-#'   fitted values.
-error_var <- function(object){
-  n <- nrow(object$matrix)
-  p <- ncol(object$matrix)
-  deviance(object)/(n-p)
-}
-
-
-
 #' Probability of Response 
 #' 
-#' Probability of observing the response given a (bayesian) linear regression model.
+#' Probability of observing the response given a (bayesian) linear regression
+#' model.
 #' 
 #' @param object a \code{\link{blm}} object.
-#' 
-#' @details Computes as described in \url{https://en.wikipedia.org/wiki/Bayesian_linear_regression}.
+#' @param a_prior prior value for parameter a of inv. gamma distribution.
+#' @param b_prior prior value for parameter b of inv. gamma distribution.
+#' @param use_log compute the log-probability.
+#'    
+#' @details Computes as described in 
+#'   \url{https://en.wikipedia.org/wiki/Bayesian_linear_regression}. By default
+#'   the log-probability is computed as non log-transformed probabilites are not
+#'   solvable.
 #' 
 #' @export
-pY <- function(object, prior_mean = 1, prior_var = 1){
-  a_prior <- prior_mean/2
-  b_prior <- (prior_mean * prior_var)/2
+pY <- function(object, a_prior = 1, b_prior = 1, use_log = TRUE){
   
   resp <- model.response(object$frame)
   
@@ -468,43 +450,78 @@ pY <- function(object, prior_mean = 1, prior_var = 1){
   n <- nrow(object$matrix)
   
   a_post <- a_prior + n/2
-  b_post <- b_prior + 0.5*( t(resp)%*%resp + 
+  b_post <- drop(b_prior + 0.5*( t(resp)%*%resp + 
                                   t(mu_prior) %*% cov_prior %*% mu_prior -
-                                  t(mu_post) %*% cov_post %*% mu_post )
+                                  t(mu_post) %*% cov_post %*% mu_post ) )
   
-  1/((2*pi)^(n/2)) * 
-    sqrt( det(cov_prior)/det(cov_post) ) * 
-    (b_prior^a_prior) / (b_post^a_post) *
+  if (use_log) {
+    log(1/((2*pi)^(n/2))) + 
+      log(sqrt( det(as.matrix(cov_prior))/det(as.matrix(cov_post)) )) + 
+      a_prior*log(b_prior) - a_post*log(b_post) +
+      log(gamma(a_post)) - log(gamma(a_prior))
+  } else {
+    1/((2*pi)^(n/2)) * 
+    sqrt( det(as.matrix(cov_prior))/det(as.matrix(cov_post)) ) * 
+    b_prior^a_prior / b_post^a_post *
     gamma(a_post) / gamma(a_prior)
+  }
 }
 
 
 
 #' Bayes Factor
 #' 
-#'  Computes the Bayes factor for comparison of 2 \code{\link{blm}} objects.
-#'  
-#'  @param model1 first \code{blm} object
-#'  @param model2 second \code{blm} object
-#'  
-#'  @details Returns the ratio of the probability of model1 divided by the probability of model2. A value of K > 1 means that M1 is more strongly supported by the data under consideration than M2 (\url{https://en.wikipedia.org/wiki/Bayes_factor}). Wikipedia mentions additional scales for interpretation, ie by Harold Jeffreys: 
+#' Computes the Bayes factor for comparison of 2 \code{\link{blm}} objects.
+#' 
+#' @param model1 first \code{blm} object
+#' @param model2 second \code{blm} object
+#' 
+#' @details Returns the ratio of the probability of model1 divided by the
+#'   probability of model2. A value of K > 1 means that M1 is more strongly
+#'   supported by the data under consideration than M2
+#'   (\url{https://en.wikipedia.org/wiki/Bayes_factor}). Wikipedia mentions
+#'   additional scales for interpretation, ie by Harold Jeffreys:
 #'    \itemize{
 #'      \item K < 1: supports model2
 #'      \item K > 10: strong support for model1
 #'      \item K > 100: decisive support for model1
 #'    }.
-#'  An alternative table, widely cited, is provided by Kass and Raftery:
+#'  An alternative table, widely cited, is provided by Kass and Raftery.
 #'    \itemize{
 #'      \item K 1-3: not worth more than a bare mention
 #'      \item K 3-20: positive support for model1
 #'      \item K 20-150: strong support for model1
-#'      \item K >150: strong support for model1
+#'      \item K >150: very strong support for model1
 #'    }.
+#' 
+#' @examples
+#' set.seed(1) 
+#' x <- seq(-10,10,.1) 
+#' b <- 0.3
+#' 
+#' w0 <- 20 ; w1 <- 3 ; w2 <- 10
+#' 
+#' y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
+#' model <- blm(y ~ x + sin(x), prior = NULL, data = data.frame(x=x, y=y))
+#' 
+#' plot(model, xlim=c(-10,10)) 
+#' pY(model) ## -955.8591 this is the log-probability
+#' 
+#' #another model removing the sinus term 
+#' model2 <- blm(y ~ x, prior = NULL, data = data.frame(x=x, y=y))
+#' 
+#' pY(model2) ## -958.128 
+#' bayes_factor(model, model2) #9.668859
+#' 
+#' model3 <- blm(y ~ x + 0, prior = NULL, data = data.frame(x=x, y=y))
+#' pY(model3) ## -960.2644
+#' bayes_factor(model, model3) #137.592
 #' 
 #' @export
 bayes_factor <- function(model1, model2) {
-  pY(model1) / pY(model2)
+  exp( pY(model1) - pY(model2) )
 }
+
 
 
 #' Extract Model Fitted Values 
@@ -623,14 +640,14 @@ deviance.blm <- function(object, ...){
 #' @param ... other arguments (currently ignored).
 #' 
 #' @details Bayesian information criterion (BIC) of the \code{blm} object. 
-#'   \code{BIC} = n * ln(RSS/n) + k * ln(n). Where n is the number of 
+#'   \eqn{BIC = n * ln(RSS/n) + k * ln(n)}. Where n is the number of 
 #'   observations, k is the number of free parameters to be estimated and RSS is
 #'   the residuals sum of squares (ie the \code{\link{deviance}}). When 
 #'   comparing 2 models the strength of the evidence against the model with the 
 #'   higher BIC value can be summarized as follows according to Wikipedia
 #'   (\url{https://en.wikipedia.org/wiki/Bayesian_information_criterion}):
 #'   \tabular{ll}{
-#'     ΔBIC \tab Evidence against higher BIC\cr
+#'     \bold{\eqn{\Delta}BIC} \tab \bold{Evidence against higher BIC}\cr
 #'     0-2 \tab Not worth more than a bare mention\cr
 #'     2-6 \tab Positive\cr
 #'     6-10 \tab Strong\cr
@@ -640,20 +657,20 @@ deviance.blm <- function(object, ...){
 #' @examples
 #' set.seed(1) 
 #' x <- seq(-10,10,.1) 
-#' b <- 3
+#' b <- 0.3
 #' 
 #' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
 #' 
 #' y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
-#' model <- blm(y ~ x + sin(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+#' model <- blm(y ~ x + sin(x), prior = NULL, data = data.frame(x=x, y=y))
 #' 
 #' plot(model, xlim=c(-10,10)) 
-#' bic(model) ## -1.582287
+#' bic(model) ## 221.6777
 #' 
 #' #another model removing the sinus term 
-#' model2 <- blm(y ~ x, prior = NULL, beta = b, data = data.frame(x=x, y=y))
+#' model2 <- blm(y ~ x, prior = NULL, data = data.frame(x=x, y=y))
 #' 
-#' bic(model2) ## 785.2877
+#' bic(model2) ## 805.4814
 #'   
 #' @export 
 bic <- function(object, ...){
@@ -787,10 +804,7 @@ print.summary.blm <- function(x, ...){
 #' 
 #' y <- rnorm(100, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b))
 #' model <- blm(y ~ x + sin(x), prior = NULL, beta = b, 
-#'                data = data.frame(x=x, y=y))
-#' 
-#' plot(model, xlim=c(-10,10))
-#' 
+#'                data = data.frame(x=x, y=y)) 
 #' 
 #' ##need to do more in case of complex model that does not contain a term 'x'
 #' y <- rnorm(100, mean = w0 + w1 * cos(x), sd = sqrt(1/b))
@@ -941,6 +955,67 @@ plot.blm <- function(x, explanatory = NULL,
   }
   
 }
+
+
+
+#' Sample Lines
+#' 
+#' Adds random sampled lines from a \code{blm} object to an existing plot.
+#' 
+#' @param object a \code{blm} object
+#' @param n number of lines to show
+#' @param sample_from_prior draw samples from the prior distribution?
+#' @param ... additional arguments passed to lines
+#' 
+#' @details Draws random samples from the posterior (or prior if sample_from_prior = TRUE) distribution of \code{\link{blm}} object. Requires the mvrnorm from the MASS package for random sampling.
+#' 
+#' @examples
+#' 
+#' @export 
+add_sample_lines <- function(object, n = 5, sample_from_prior = FALSE, ...) {
+  if (sample_from_prior) {
+    d <- object$prior
+  } else {
+    d <- object$posterior
+  }
+  s <- mvrnorm(n, d$means, d$covar, empirical=TRUE)
+  
+  apply(s, 1, abline, ...)
+}
+
+
+
+#' Density Plot of Parameters
+#' 
+#' Plots a kernel density for the distribution of the parameters of a \code{blm} object.
+#' 
+#' @param object a \code{blm} object
+#' @param n sampling depth used for kernel density estimation.
+#' @param sample_from_prior draw samples from the prior distribution?
+#' @param ... additional arguments passed to plot
+#' 
+#' @details Draws random samples from the posterior (or prior if sample_from_prior = TRUE) distribution of \code{\link{blm}} object and plots the kernel density of those. Requires the mvrnorm from the MASS package for random sampling. If present, the package LSD is used for kernel density coloring
+#' 
+#' @examples
+#' 
+#' @export 
+parameter_kernel <- function(object, n = 10000, sample_from_prior = FALSE, ...) {
+  if (sample_from_prior) {
+    d <- object$prior
+    title <- paste('Parameter density for prior distribution of \n',
+                   deparse(object$call),sep='')
+  } else {
+    d <- object$posterior
+    title <- paste('Parameter density for posterior distribution of \n',
+                   deparse(object$call),sep='')
+  }
+  s <- mvrnorm(n, d$means, d$covar, empirical=TRUE)
+  heatscatter(s[,2], s[,1], 
+              main = title,
+              xlab=names(d$means)[2], 
+              ylab=names(d$means)[1], ...)
+}
+
 
 
 #' Plot of Residuals against Fitted Values
