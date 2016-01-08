@@ -11,4 +11,4 @@ Description: Package for bayesian linear regression. Can fit experimental data,
   and model.
 License: GPL-2
 RoxygenNote: 5.0.1
-Suggests: testthat
+Suggests: testthat, MASS, LSD
