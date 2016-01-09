@@ -7,20 +7,39 @@
 \title{blm: A package for bayesian linear regression.}
 \description{
 The \code{blm} package is for construction and analysis of bayesian linear
-regression models.
+regression models. The core functions all operate on a S3 class \code{\link{blm}}.
 }
-\section{blm functions}{
+\section{Generic functions for blm objects}{
 
-blm
-update.blm
-print.blm
-summary.blm
-fitted.blm
-predict.blm
-summary.blm
-resid.blm
-coef.blm
-deviance.blm
-plot.blm
+\itemize{
+  \item \link{update.blm}
+  \item \link{print.blm}
+  \item \link{summary.blm}
+  \item \link{fitted.blm}
+  \item \link{predict.blm}
+  \item \link{summary.blm}
+  \item \link{residuals.blm}
+  \item \link{coef.blm}
+  \item \link{deviance.blm}
+  \item \link{plot.blm}
+}
+}
+
+\section{Other plots for analysis of blm objects}{
+
+\describe{
+  \item{\link{add_sample_lines}}{Adds random sampled fit lines to a plot.blm.}
+  \item{\link{parameter_kernel}}{Plot of mdistribution of coefficients.}
+  \item{\link{diagnostic_plots}}{Diagnostic plots, similar to \code{\link{plot.lm}}.}
+}
+}
+
+\section{Other experimental functions for analysis of blm objects}{
+
+\describe{
+  \item{\link{pblm}}{Total probability of the model.}
+  \item{\link{bayes_factor}}{Bayes factor for comparison of 2 models.}
+  \item{\link{bic}}{Bayesian information criterion (BIC) of the model.}
+}
 }
 
