@@ -39,7 +39,7 @@ NULL
 
 
 
-#' Prior distribution
+#' Create Prior Distribution
 #' 
 #' Creates a prior distribution for a blm object
 #' 
@@ -60,7 +60,7 @@ NULL
 #'   make_prior(0,1,2)
 #'  
 #'   make_prior(c(0,1),c(1,2))
-#'  
+#'   
 #' @export
 make_prior <- function(mean, alpha, dim = length(mean)){
   covar <- diag(1/alpha, dim, dim)
@@ -73,8 +73,7 @@ make_prior <- function(mean, alpha, dim = length(mean)){
 
 #' Bayesian Linear Regression
 #' 
-#' Computes a bayesian linear regression fit. The current implementation 
-#' requires knowledge about the precision \code{beta} of the observations.
+#' Computes a bayesian linear regression fit. 
 #' 
 #' @param formula an object of class "formula": a symbolic description of the 
 #'   model to be fitted.
@@ -159,17 +158,20 @@ blm <- function(formula, prior = NULL, beta, ...) {
   prior_precision <- solve(prior_covar)
   
   if (missing(beta)) {
-    covar <- solve( prior_precision + t(matrix) %*% matrix )
+    coef_lm <- solve(t(matrix) %*% matrix) %*% t(matrix) %*% response
+    beta <- 1/(sum((response - drop(matrix %*% coef_lm))^2)/df)
+    #covar <- solve( prior_precision + t(matrix) %*% matrix )
     
-    means <- covar %*% 
-      drop(prior_precision %*% prior_means + 
-             t(matrix) %*% matrix(response,ncol=1))
+    #means <- covar %*% 
+    ##  drop(prior_precision %*% prior_means + 
+    #         t(matrix) %*% matrix(response,ncol=1))
     
-    beta <- 1/(sum((response - drop(matrix %*% means))^2)/df)
-  } else {
+    #beta <- 1/(sum((response - drop(matrix %*% means))^2)/df)
+    
+  } #else {
     covar <- solve(prior_covar + beta * t(matrix) %*% matrix)
     means <- beta * covar %*% t(matrix) %*% response
-  }
+  #}
   
   posterior <- distribution(mv_dist(means, covar))
   
@@ -236,7 +238,6 @@ blm <- function(formula, prior = NULL, beta, ...) {
 #'   new_mod2 <- update(mod, ~.+0, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
 #'   new_mod2
 #'    
-#' 
 #' @export
 update.blm <- function(object, 
                        formula = object$formula, 
@@ -602,9 +603,9 @@ print.summary.blm <- function(x, ...){
   cat('\n----\n')
   cat('Posterior Coefficients:\n')
   cat('\nEstimate:\n')
-  print(coef(x))
+  print(x$posterior$means)
   cat('\nCovariance:\n')
-  print(covar.blm(x))
+  print(x$posterior$covar)
   cat('\n----\n')
   cat('Prior Coefficients:\n')
   cat('\nEstimate:\n')
