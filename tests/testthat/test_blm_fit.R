@@ -64,8 +64,8 @@ test_that(paste("Variance of predicted values increases with distance to data po
   mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
   
   x2 <- 0:100
-  y2 <- predict(mod, data.frame(x=x2), var=T)
-  expect_equal(cor(x2, y2$var, method='spearman'),1)
+  y2 <- predict(mod, data.frame(x=x2), se.fit=T)
+  expect_equal(cor(x2, y2$se.fit, method='spearman'),1)
 
 })
 
