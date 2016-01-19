@@ -19,7 +19,11 @@ add_sample_lines(object, n = 5, sample_from_prior = FALSE, ...)
 Adds random sampled lines from a \code{blm} object to an existing plot.
 }
 \details{
-Draws random samples from the posterior (or prior if sample_from_prior = TRUE) distribution of \code{\link{blm}} object. Requires the mvrnorm from the MASS package for random sampling. NOTE: only works for straight lines, assuming first and second coefficient are intercept and slope.
+Draws random samples from the posterior (or prior if
+  sample_from_prior = TRUE) distribution of \code{\link{blm}} object.
+  Requires the mvrnorm from the MASS package for random sampling. NOTE: only
+  works for straight lines, assuming first and second coefficient are
+  intercept and slope.
 }
 \examples{
 x <- rnorm(100)
@@ -31,7 +35,9 @@ model <- blm(y ~ x, prior = NULL, beta = b,
                data = data.frame(x=x, y=y)) 
 
 plot(model)
+\dontrun{
 add_sample_lines(model, col='green')                
+}
 
 }
 

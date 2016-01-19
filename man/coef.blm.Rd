@@ -4,10 +4,12 @@
 \alias{coef.blm}
 \title{Coefficients}
 \usage{
-\method{coef}{blm}(object, ...)
+\method{coef}{blm}(object, covar = FALSE, ...)
 }
 \arguments{
 \item{object}{a \code{blm} object.}
+
+\item{covar}{return the covariance matrix instead of estimates for the coefficients?}
 
 \item{...}{other arguments (currently ignored).}
 }

@@ -10,7 +10,7 @@ blm(formula, prior = NULL, beta, ...)
 \item{formula}{an object of class "formula": a symbolic description of the 
 model to be fitted.}
 
-\item{prior}{the prior distribution, either a \code{mv_dist} or a \code{blm} 
+\item{prior}{the prior distribution, either a \code{mvnd} or a \code{blm} 
 object.}
 
 \item{beta}{the precision of the data used for the model.}
@@ -32,8 +32,7 @@ A object of class \code{blm}. An object of class "lm" is a list
   }
 }
 \description{
-Computes a bayesian linear regression fit. The current implementation 
-requires knowledge about the precision \code{beta} of the observations.
+Computes a bayesian linear regression fit.
 }
 \details{
 Models for \code{blm} are provided as for \code{\link{lm}}. If prior

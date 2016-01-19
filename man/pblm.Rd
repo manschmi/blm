@@ -2,7 +2,7 @@
 % Please edit documentation in R/blm_analysis.R
 \name{pblm}
 \alias{pblm}
-\title{Probability of Response}
+\title{Model Probability}
 \usage{
 pblm(object, a_prior = 1, b_prior = 1, use_log = TRUE)
 }

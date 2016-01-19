@@ -2,7 +2,7 @@
 % Please edit documentation in R/blm.R
 \name{make_prior}
 \alias{make_prior}
-\title{Prior distribution}
+\title{Create Prior Distribution}
 \usage{
 make_prior(mean, alpha, dim = length(mean))
 }
@@ -14,7 +14,7 @@ make_prior(mean, alpha, dim = length(mean))
 \item{dim}{number of variables for the distribution.}
 }
 \value{
-An object of class \code{mv_dist} with provided means and covariances
+An object of class \code{mvnd} with provided means and covariances
   computed as 1/\code{alpha}.
 }
 \description{
@@ -22,7 +22,7 @@ Creates a prior distribution for a blm object
 }
 \details{
 Creates a multivariate normal distribution object of class 
-  \code{\link{mv_dist}} that holds \code{means} and covariance \code{covar} 
+  \code{\link{mvnd}} that holds \code{means} and covariance \code{covar} 
   of a multivariate normal distribution. If number of means or covars is less
   than \code{dim}, the values provided are expanded to fill the multivariate 
   distribution.
@@ -31,6 +31,6 @@ Creates a multivariate normal distribution object of class
   make_prior(0,1,2)
  
   make_prior(c(0,1),c(1,2))
- 
+  
 }
 

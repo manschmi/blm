@@ -38,23 +38,22 @@ set.seed(1)
 x <- seq(-10,10,.1) 
 b <- 0.3
 
-w0 <- 20 ; w1 <- 3 ; w2 <- 10
+w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
 
 y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
-model <- blm(y ~ x + sin(x), prior = NULL, data = data.frame(x=x, y=y))
+mod1 <- blm(y ~ x + sin(x))
 
-plot(model, xlim=c(-10,10)) 
-pblm(model) ## -955.8591 this is the log-probability
+pblm(mod1) ## -886.4801 this is the log-probability (log=TRUE by default)
 
 #another model removing the sinus term 
-model2 <- blm(y ~ x, prior = NULL, data = data.frame(x=x, y=y))
+mod2 <- blm(y ~ x)
 
-pblm(model2) ## -958.128 
-bayes_factor(model, model2) #9.668859
+pblm(mod2) ## -891.0581 
+bayes_factor(mod1, mod2) #97.31074 #strong support for mod1 over mod2
 
-model3 <- blm(y ~ x + 0, prior = NULL, data = data.frame(x=x, y=y))
-pblm(model3) ## -960.2644
-bayes_factor(model, model3) #137.592
+mod3 <- blm(y ~ x + 0)
+pblm(mod3) ## -891.842
+bayes_factor(mod1, mod3) #213.128 #very strong support for mod1 over mod3
 
 }
 

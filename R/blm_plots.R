@@ -97,7 +97,7 @@
 #'  
 #' 
 #' @export
-plot.blm <- function(x, explanatory = NULL, 
+plot.blm <- function(x, explanatory = NULL,
                      show_blm_interval = TRUE, 
                      blm_interval_level = .95,
                      expand_fit = TRUE,
@@ -156,16 +156,16 @@ plot.blm <- function(x, explanatory = NULL,
   } 
   
   #add blm fit
-  y_blm <- predict(object, data, report.var=T)
+  y_blm <- predict(object, data, se.fit=TRUE)
   
   #MAP fit lines
-  y_blm_map <- y_blm$mean
+  y_blm_map <- y_blm$fit
   lines(y_blm_map~x_fit, col = blm_col, lty= blm_map_lty)
   
   #add quantiles of the fit
   if (show_blm_interval) {
-    upper <- qnorm(blm_interval_level, mean = y_blm$mean, sd = sqrt(y_blm$var))
-    lower <- qnorm(1-blm_interval_level, mean = y_blm$mean, sd = sqrt(y_blm$var))
+    upper <- qnorm(blm_interval_level, mean = y_blm$fit, sd = y_blm$se.fit)
+    lower <- qnorm(1-blm_interval_level, mean = y_blm$fit, sd = y_blm$se.fit)
     lines(lower~x_fit, col = blm_col, lty = blm_interval_lty)
     lines(upper~x_fit, col = blm_col, lty = blm_interval_lty)
   }
@@ -213,7 +213,11 @@ plot.blm <- function(x, explanatory = NULL,
 #' @param sample_from_prior draw samples from the prior distribution?
 #' @param ... additional arguments passed to lines
 #' 
-#' @details Draws random samples from the posterior (or prior if sample_from_prior = TRUE) distribution of \code{\link{blm}} object. Requires the mvrnorm from the MASS package for random sampling. NOTE: only works for straight lines, assuming first and second coefficient are intercept and slope.
+#' @details Draws random samples from the posterior (or prior if
+#'   sample_from_prior = TRUE) distribution of \code{\link{blm}} object.
+#'   Requires the mvrnorm from the MASS package for random sampling. NOTE: only
+#'   works for straight lines, assuming first and second coefficient are
+#'   intercept and slope.
 #' 
 #' @examples
 #' x <- rnorm(100)
@@ -231,7 +235,7 @@ plot.blm <- function(x, explanatory = NULL,
 #'
 #' @export 
 add_sample_lines <- function(object, n = 5, sample_from_prior = FALSE, ...) {
-  if (requireNamespace("MASS", quietly = TRUE)) {
+  if (!requireNamespace("MASS", quietly = TRUE)) {
     stop('add_sample_lines requires package MASS',
          call. = FALSE)
   }
@@ -248,17 +252,21 @@ add_sample_lines <- function(object, n = 5, sample_from_prior = FALSE, ...) {
 
 
 
-#' Density Plot of Parameters
+#' Density Plot of Multivariate Normal Distribution
 #' 
-#' Plots a kernel density for the distribution of the parameters of a \code{blm} object.
+#' Plots a kernel density for a \code{mvnd} object.
 #' 
-#' @param object a \code{blm} object
+#' @param object a \code{mvnd} object
 #' @param n sampling depth used for kernel density estimation.
-#' @param sample_from_prior draw samples from the prior distribution?
 #' @param ... additional arguments passed to the plot function.
 #' 
-#' @details Draws random samples from the posterior (or prior if sample_from_prior = TRUE) distribution of \code{\link{blm}} object and plots the kernel density of those. Requires the mvrnorm from the MASS package for random sampling. If present, the package LSD is used for kernel density coloring. ... argments are passed to generic plot or \code{\link[LSD]{heatscatter}} functions if LSD package is installed.
-#' 
+#' @details Draws random samples from a multivariate normal distribution of
+#'   \code{\link{mvnd}} object and plots the kernel density of those.
+#'   Requires the mvrnorm from the MASS package for random sampling. If present,
+#'   the package LSD is used for kernel density coloring. ... argments are
+#'   passed to generic plot or \code{\link[LSD]{heatscatter}} functions if LSD
+#'   package is installed.
+#'   
 #' @examples
 #' x <- rnorm(100)
 #' b <- 1.3
@@ -270,35 +278,26 @@ add_sample_lines <- function(object, n = 5, sample_from_prior = FALSE, ...) {
 #' 
 #' \dontrun{
 #' par(mfrow=c(1,2))
-#' parameter_kernel(model, sample_from_prior = TRUE, xlim=c(-4,4), ylim=c(-4,4))    
-#' parameter_kernel(model, sample_from_prior = FALSE, xlim=c(-4,4), ylim=c(-4,4))
+#' kernel_density(model$prior, xlim=c(-4,4), ylim=c(-4,4), main='prior')    
+#' kernel_density(model$posterior, xlim=c(-4,4), ylim=c(-4,4), main='posterior')
 #' par(mfrow=c(1,1)) 
 #' } 
 #'                
 #' @export 
-parameter_kernel <- function(object, n = 10000, sample_from_prior = FALSE, ...) {
-  if (requireNamespace("MASS", quietly = TRUE)) {
-    stop('Parameter kernel requires package MASS',
+kernel_density <- function(object, n = 10000, ...) {
+  if (!requireNamespace("MASS", quietly = TRUE)) {
+    stop('Kernel density requires package MASS',
          call. = FALSE)
   }
-  if (sample_from_prior) {
-    d <- object$prior
-    title <- paste('Prior', deparse(object$formula),sep='\n')
-  } else {
-    d <- object$posterior
-    title <- paste('Posterior', deparse(object$formula),sep='\n')
-  }
-  s <- MASS::mvrnorm(n, d$means, d$covar, empirical=TRUE)
+  s <- MASS::mvrnorm(n, object$means, object$covar, empirical=TRUE)
   if (requireNamespace("LSD", quietly = TRUE)) {
     LSD::heatscatter(s[,2], s[,1], 
-                     main = title,
-                     xlab=names(d$means)[2], 
-                     ylab=names(d$means)[1], ...)
+                     xlab=names(object$means)[2], 
+                     ylab=names(object$means)[1], ...)
   } else {
     plot(s[,2], s[,1], 
-         main = title,
-         xlab=names(d$means)[2], 
-         ylab=names(d$means)[1], ...)
+         xlab=names(object$means)[2], 
+         ylab=names(object$means)[1], ...)
   }
 }
 
@@ -326,7 +325,7 @@ resid_vs_fitted_plot <- function(object,
                                  labels.id = names(residuals(object)), 
                                  cex.id = 0.75,
                                  ...) {
-  fits <- fitted(object, report.var = T)
+  fits <- fitted(object, var = T)
   y <- resid(object)
   x <- fits$mean
   plot(y~x,  
@@ -374,7 +373,7 @@ scale_location_plot <- function(object,
                                 labels.id = names(residuals(object)), 
                                 cex.id = 0.75,
                                 ...) {
-  x <- fitted(object, report.var = FALSE)
+  x <- fitted(object, var = FALSE)
   y <- sqrt(abs(resid(object)))
   plot(y~x, 
        main = 'Scale-Location',
@@ -405,7 +404,7 @@ scale_location_plot <- function(object,
 #'   implementation, the residuals here are taken for sqrt(| residuals |) and
 #'   not the standardized residuals.
 qq_blm_plot <- function(object, qqline = TRUE, ...) {
-  x <- fitted(object, report.var = FALSE)
+  x <- fitted(object, var = FALSE)
   y <- resid(object)
   
   qqnorm(x, 

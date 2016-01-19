@@ -1,0 +1,367 @@
+---
+title: "The blmr package"
+author: "Manfred Schmid"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Note
+The blmr package was created as part of a DataScience course at Aarhus University and is NOT intended for use. Expecially correct handling of data precision is not finally confirmed.
+
+
+## Introduction
+This vignette describes varies functionalities of the blmr package.
+The blmr package allows for fitting of Bayesian Linear Models *blm* to data. The fit is stored in a S3 object of class *blm*. The package includes many generic functions available for Linear Model *lm* objects (coef, resid, ...). The plotting function is designed to visualize the blm model together with the data. At the end I also implemented a few functions for analysis of blm objects.
+
+
+Install and load the package:
+```{r load the library}
+#devtools::install_github('manschmi/blmr')
+library(blmr)
+library(knitr) #for kable
+```
+
+
+## Fitting a Bayesian Model
+
+I don't provide example data but rather demonstrate functionality using random data. 
+The basic linear model would be like:
+$$y = w_0 + w_1*x + \epsilon$$
+
+To simlulate a simple linear regression problem we use:
+```{r simple model data}
+set.seed(0)
+w0 <- 1
+w1 <- 2
+x <- seq(-100,100,10)
+b <- 0.001
+e <- rnorm(length(x), mean=0, sd=sqrt(1/b) )
+y <- w0 + w1*x + e
+```
+
+
+The blm fit using default settings is straightforward.
+```{r blm simple}
+blm_mod <- blm(y~x)
+blm_mod
+```
+
+
+With default setting the result is very similar to a lm fit.
+```{r a regular lm fit works like this}
+lm_mod <- lm(y~x)
+lm_mod
+```
+
+
+We can easily visualize this (more on the plotting function later):
+```{r plot early easy models}
+plot(blm_mod, legend_parm=list(cex=.5))
+```
+
+
+### Priors
+The normal blm fit is extremely close to the lm fit. This is mostly because an uniformative  prior is used. Here the prior would have means 0 for both intercept and slope and variance 1. But what about if you want to specify other priors. The prior (supported by this package) need to be multivariate normal distributions and for the package also contains a S3 class for multivariate normal distribution *mvnd*.
+Its funcitonality is very simple and easies demonstrated by example:
+```{r}
+custom_prior <- mvnd(means = c(1,1), covar = matrix(c(2,.2,.2,2),ncol=2))
+custom_prior
+
+blm(y~x, prior=custom_prior)
+```
+
+
+A typical use case would be to use the posterior distribution of an existing blm object as prior for a new model. An this is easy as an *blm* object can be used as prior.
+```{r}
+blm(y~x, prior=blm_mod)
+```
+
+
+### Precision
+When precision of the error $\beta$ is not provided it is estimated from the data using the deviance of the observed y values from the lm (ie MLE) fit using the following equation: 
+$$\textit{1. MLE coefficients:  } \textbf{w} = (\textbf{$\Theta$}_\textbf{x}^T\textbf{$\Theta$}_\textbf{x})^{-1}\textbf{$\Theta$}_\textbf{x}^T\textbf{y}$$
+$$\textit{2. MLE residuals:  } \textbf{RSS} = \textbf{y} - \textbf{w}\textbf{$\Theta$}_\textbf{x}$$.
+$$\textit{3. precision:  }  \beta = \left({\frac{\sum{\textbf{RSS}}}{n-p}}\right)^{-1}$$
+
+Pretty straightforward, simply do the MLE fit, get the variance of the residuals using degrees of freedom of the regression model.
+
+
+As alternative it is also possible to specify beta as argument to the *blm* function.
+```{r}
+set.seed(0)
+w0 <- 1
+w1 <- 2
+x <- seq(-100,100,10)
+b <- 0.001
+y <- w0 + w1*x + rnorm(length(x), mean=0, sd=sqrt(1/b) )
+blm(y~x, beta=b)
+```
+
+Compared to test without providing precision (ie where it is estimated from the data):
+```{r to be used in tests2c....}
+blm(y~x, beta = b)
+````
+
+The MAP and covariance values are very close although not exactly the same.
+Lets check it out on a plot:
+```{r}
+plot(blm(y~x), legend_parm=list(cex=.5))
+abline(blm(y~x, beta = b), col='green', lwd=3)
+abline(lm(y~x), col='orange', lwd=3)
+```
+
+
+## The *blm* object
+
+The blm object contains the following slots. The most important of these can be accessed via generic or blm-specific functions (in paranthesis).
+call: the matched call ( no fun )
+formula: the formula used ( formula() )
+df.residual: the degrees of freedom of the model ( df.residual() )
+frame: the model frame used ( model.frame() )
+matrix: the model matrix used ( model.matrix() )
+beta: the precision of the data ( precision() )
+prior: the prior distribution used ( no fun )
+posterior: the posterior distribution ( coef(), coef( , var=TRUE) )
+
+
+The coef() (or coefficients() ) returns by default only the MAP estimate of the coefficients.
+```{r}
+coef(blm_mod)
+```
+
+To get the covariance of the posterior distribution set argument *covar = TRUE*:
+```{r}
+coef(blm_mod, covar=TRUE)
+```
+
+
+### Extracting residuals, fitted values, ...
+Again, this is done using generic functions.
+So far those are implemented:
+
+resid, residual\cr
+deviance\cr
+fitted\cr
+predict\cr
+confint\cr
+
+
+#### fitted, predict and residuals
+For fitted, predict and residuals it is possible to retrieve the variance of the esimate (same as the variance for the fitted values they are calculated from) together with the MAP estimate using parameter *var = TRUE*.
+```{r}
+fitted(blm_mod)
+
+fitted(blm_mod, var=TRUE)
+```
+
+
+
+#### confint
+Bayesian statistics does not use the term 'confidence interval'. However, the 95% quantile of the distribution of parameters is pretty obvious choice to be consistent with generic model functions. So this is what is provided here.
+
+```{r}
+confint(blm_mod)
+```
+
+
+
+## update
+
+The update function used for the blm package was designed for versatility. It takes a blm object as input, together with a set of parameters (a new formula, prior and/or data) to update to and returns a **new** model with the updated fit. By default, the posterior of the input model will be used as prior for the updated model.
+Lets update our blm_mod for example:
+```{r}
+x2 <- rnorm(50) 
+y2 <- rnorm(50, w1 * x2 + w0, 1/b)
+new_mod <- update(blm_mod, data=data.frame(x=x2, y=y2)) 
+new_mod
+```
+As can be seen the posterior of the input model blm_mod is used as prior for the updated model in this case.
+If we won't the updated model to use the same prior, this needs to be specified:
+```{r}
+update(blm_mod, prior=blm_mod$prior, data=data.frame(x=x2, y=y2)) 
+```
+
+We can also update the formula. Typically this involves dropping factors.
+```{r}
+update(blm_mod, y~x+0, prior=blm_mod$prior, data=data.frame(x=x2, y=y2)) 
+```
+
+And this can be done using R formula update semantics.
+```{r}
+update(blm_mod, ~.+0, prior=blm_mod$prior, data=data.frame(x=x2, y=y2)) 
+```
+
+
+
+## Plotting
+
+The function plot.blm produces a single plot of the data points, together with the blm MAP estimate, the 95% quantile and the lm fits.
+
+```{r}
+plot(blm_mod)
+```
+
+There is a little catch here. The blm object does not store the raw data used to create the model. In a scenario where the x values are not part of the model matrix and frame we need to provide them as arguments to the function:
+
+```{r}
+w0 <- .2
+w1 <- 3
+x <- seq(-100,100,1)
+b <- 1.3
+y <- w0 + w1*cos(x) + rnorm(length(x), mean=0, sd=sqrt(1/b) )
+
+model <- blm(y ~ cos(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+#plot(model) fails due to 'lack' of x in the 'model' object
+
+plot(model, explanatory='x')
+```
+
+
+
+## Complex Models
+
+Additional terms, as already seen above.
+```{r}
+w0 <- .2
+w1 <- 3
+w2 <- 10
+x <- seq(-100,100,1)
+b <- 1.3
+y <- w0 + w1*x + w2*cos(x) + rnorm(length(x), mean=0, sd=sqrt(1/b) )
+
+mod <- blm(y ~ x + cos(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+summary(mod)
+```
+
+```{r}
+w0 <- .2
+w1 <- 3
+w2 <- 10
+x <- seq(-100,100,1)
+b <- 0.00003
+y <- w0 + w1*x + w2*x^2 + rnorm(length(x), mean=0, sd=sqrt(1/b) )
+
+mod <- blm(y ~ x + I(x^2), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+summary(mod)
+plot(mod, pch=19, xlim=c(-15,15), ylim=c(-200,2000))
+```
+
+or also:
+```{r}
+mod <- blm(y ~ poly(x,2, raw=TRUE), prior = NULL, beta = b, data = data.frame(x=x, y=y))
+summary(mod)
+plot(mod, explanatory='x',pch=19, xlim=c(-15,15), ylim=c(-200,2000))
+```
+```
+
+
+
+##Model Analysis and Comparison
+
+The parts below or of preliminary experimental nature and there are absolutely no guarantees for correct functioning.
+
+
+####Bayes Information Criterion (BIC)
+
+Note, this does nothing special on a blm compared to an lm object. It simply computes:
+$$BIC = log\left(\frac{\sum{RSS}}{n}\right) * k * log(n)$$
+Where: n is the number of data points, k is the number of parameters and RSS are the squared residuals of the fit.
+
+
+####Bayes Factor
+Bayes factor applies a likelihood test comparing the total probability of 2 models. To compute the likelihood for a *blm* model fit I used a formula from Wikipedia (https://en.wikipedia.org/wiki/Bayesian_linear_regression).
+$$ p(y|m) = \frac{1}{(2*pi)^{\frac{n}{2}}} * \sqrt{\frac{det(S_{0})}{det(S_{n})}} * \frac{b_{0}^{a_{0}}}{b_{n}^{a_{n}}} * \frac{a_{n}}{a_{0}}$$
+
+
+```{r}
+ set.seed(1) 
+ x <- seq(-10,10,.1) 
+ b <- 0.3
+ 
+ w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
+ 
+ y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
+ mod1 <- blm(y ~ x + sin(x))
+ bic(mod1)
+```
+
+```{r}
+plot(mod1, xlim=c(-10,10)) 
+```
+
+
+compate this fit to another mod removing the sinus term, clearly less well fitting
+```{r}
+mod2 <- blm(y ~ x)
+ 
+bic(mod2)
+```
+
+The BIC for the second, much less well-fitting modelis much higher and thus the BIC indicates a better fit for *mod1*.
+ 
+ ##much less distinguished model
+ b <- 0.003
+ y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
+ mod1 <- blm(y ~ x + sin(x))
+   plot(mod1, xlim=c(-10,10))
+
+
+```
+
+ mod2 <- blm(y ~ x)
+ bic(mod1) #1209.717
+ bic(mod2) #1215.66 ... still positive support but not strong
+
+```
+
+
+
+##Some Examples for Behaviour of Bayesian Linear Models 
+
+####Variance of Fitted Values increases with distance to the data
+```{r}
+w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
+x <- rnorm(100)
+y <- rnorm(100, w1 * x + w0, 1/b)
+mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
+plot(mod, caption='data range')
+plot(mod, xlim=c(-100,100), ylim=c(-100,100), caption='extended range')
+```
+
+
+
+```{r to be used in tests1...., eval=F}
+set.seed(0)
+w0 <- 1
+w1 <- 2
+x <- seq(-100,100,10)
+b <- 0.001
+y <- w0 + w1*x + rnorm(length(x), mean=0, sd=sqrt(1/b) )
+blm_mod <- blm(y~x, beta = b)
+coefs <- coef(blm_mod)
+covars <- covar.blm(blm_mod)
+
+y0 <- w0 + w1*x
+test <- function(...){
+yn <-  y0 + rnorm(length(x), mean=0, sd=sqrt(1/b) )
+coef(lm(yn~x))
+}
+tests <- lapply(1:10000, test)
+
+intercepts <- sapply(tests, function(t) t[1])
+slopes <- sapply(tests, function(t) t[2])
+
+par(mfrow=c(1,2))
+kernel_density(blm_mod$posterior, 
+               xlim=c(1.5,2.5), ylim=c(-4,4), 
+               main = 'posterior of blm fit')
+heatscatter(slopes, intercepts, 
+            xlim=c(1.5,2.5), ylim=c(-4,4) ,
+            main = 'sampling of lm fit with random error of precision')
+par(mfrow=c(1,1))
+
+```

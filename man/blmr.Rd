@@ -29,7 +29,6 @@ regression models. The core functions all operate on a S3 class \code{\link{blm}
 
 \describe{
   \item{\link{add_sample_lines}}{Adds random sampled fit lines to a plot.blm.}
-  \item{\link{parameter_kernel}}{Plot of mdistribution of coefficients.}
   \item{\link{diagnostic_plots}}{Diagnostic plots, similar to \code{\link{plot.lm}}.}
 }
 }

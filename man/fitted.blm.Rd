@@ -4,17 +4,17 @@
 \alias{fitted.blm}
 \title{Extract Model Fitted Values}
 \usage{
-\method{fitted}{blm}(object, report.var = FALSE, ...)
+\method{fitted}{blm}(object, var = FALSE, ...)
 }
 \arguments{
 \item{object}{a \code{blm} object.}
 
-\item{report.var}{Report also variance for the fitted values.}
+\item{var}{Report also variance for the fitted values.}
 
 \item{...}{other arguments (currently ignored).}
 }
 \value{
-A vector of fitted values. If report.var = TRUE, a list containing 
+A vector of fitted values. If var = TRUE, a list containing 
   means and variances of the fitted values. Identical to \code{predict.blm} 
   without newdata.
 }

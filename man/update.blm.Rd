@@ -64,6 +64,5 @@ Updates a \code{\link{blm}} object, using features of the input
   new_mod2 <- update(mod, ~.+0, prior=mod$prior, data=data.frame(x=x2, y=y2)) 
   new_mod2
    
-
 }
 

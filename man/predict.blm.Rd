@@ -4,7 +4,8 @@
 \alias{predict.blm}
 \title{Predict}
 \usage{
-\method{predict}{blm}(object, newdata = NULL, report.var = FALSE, ...)
+\method{predict}{blm}(object, newdata = NULL, se.fit = FALSE,
+  interval = "none", level = 0.95, ...)
 }
 \arguments{
 \item{object}{a \code{blm} object.}
@@ -13,13 +14,22 @@
 predict. If missing, values used for fitting will be extracted from the 
 object.}
 
-\item{report.var}{report also variance for the predicted values.}
+\item{se.fit}{report also standard deviation for the predicted values.}
+
+\item{interval}{Type of interval calculation, currently only \code{none} and \code{confidence} implemented.}
+
+\item{level}{confidence level for interval calculation.}
 
 \item{...}{other arguments (currently ignored).}
 }
 \value{
-A vector of predicted values. If report.var = TRUE, a list containing
-  means and variances of the predicted values.
+A vector of predicted \code{fit} values. If \code{se.fit = TRUE}, a
+  named list containing the fit values under \code{$fit} and standard
+  deviations of the fit values under \code{$se.fit}. If \code{interval =
+  "confidence"}, pseudo-confidence interval, ie lower and upper bounds of
+  quantiles of the fit distrib ution are provided at \code{level} for the fit
+  values are provided with \code{$fit} as data.frame with columns
+  \code{$fit}, \code{$lwr}, \code{$upr}.
 }
 \description{
 Predict means and variance of the response variable for a \code{\link{blm}} 
@@ -34,6 +44,13 @@ Predict means and variance of the response variable for a \code{\link{blm}}
   
   predict(model)
   
+  #with standard deviation"of the fit distribution
+  predict(model, se.fit=TRUE) 
+  
+  #with "confidence interval" of the fit values
+  predict(model, interval = 'confidence', level = .95) 
+  
+  #predict for new explanatory values
   x <- rnorm(10) 
   predict(model, data.frame(x=x))
 

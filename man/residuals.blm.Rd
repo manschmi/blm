@@ -4,10 +4,12 @@
 \alias{residuals.blm}
 \title{Residuals of Bayesian Linear Model}
 \usage{
-\method{residuals}{blm}(object, ...)
+\method{residuals}{blm}(object, var = FALSE, ...)
 }
 \arguments{
 \item{object}{a \code{blm} object.}
+
+\item{var}{Report also variance for the fitted values.}
 
 \item{...}{other arguments (currently ignored).}
 }
@@ -20,7 +22,8 @@ Residuals of the \code{blm} object.
 }
 \details{
 Residuals are extracted from the maxium a posterior estimate of the 
-  \code{blm} object.
+  \code{blm} object. If var = TRUE, a list containing means and variances of
+  the fitted values.
 }
 \examples{
   x <- rnorm(10)

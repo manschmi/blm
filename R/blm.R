@@ -21,7 +21,6 @@
 #' @section Other plots for analysis of blm objects:
 #' \describe{
 #'   \item{\link{add_sample_lines}}{Adds random sampled fit lines to a plot.blm.}
-#'   \item{\link{parameter_kernel}}{Plot of mdistribution of coefficients.}
 #'   \item{\link{diagnostic_plots}}{Diagnostic plots, similar to \code{\link{plot.lm}}.}
 #' }
 #' 
@@ -48,12 +47,12 @@ NULL
 #' @param dim number of variables for the distribution.
 #'   
 #' @details Creates a multivariate normal distribution object of class 
-#'   \code{\link{mv_dist}} that holds \code{means} and covariance \code{covar} 
+#'   \code{\link{mvnd}} that holds \code{means} and covariance \code{covar} 
 #'   of a multivariate normal distribution. If number of means or covars is less
 #'   than \code{dim}, the values provided are expanded to fill the multivariate 
 #'   distribution.
 #'   
-#' @return An object of class \code{mv_dist} with provided means and covariances
+#' @return An object of class \code{mvnd} with provided means and covariances
 #'   computed as 1/\code{alpha}.
 #'   
 #' @examples
@@ -67,7 +66,7 @@ make_prior <- function(mean, alpha, dim = length(mean)){
   if (length(mean) != dim) {
     mean <- rep(mean,dim)[1:dim]
   } 
-  mv_dist(mean, covar)
+  mvnd(mean, covar)
 }
 
 
@@ -77,7 +76,7 @@ make_prior <- function(mean, alpha, dim = length(mean)){
 #' 
 #' @param formula an object of class "formula": a symbolic description of the 
 #'   model to be fitted.
-#' @param prior the prior distribution, either a \code{mv_dist} or a \code{blm} 
+#' @param prior the prior distribution, either a \code{mvnd} or a \code{blm} 
 #'   object.
 #' @param beta the precision of the data used for the model.
 #' @param ... Additional arguments and values.
@@ -136,44 +135,38 @@ blm <- function(formula, prior = NULL, beta, ...) {
   if (is.null(prior)) {
     n <- ncol(matrix)
     prior <- make_prior(mean = 0, alpha = 1, dim = n)
-    prior <- mv_dist.set_var_names(prior, coef_names)
+    prior <- mvnd.set_var_names(prior, coef_names)
   }
   
   prior <- distribution(prior)
   
-  prior_names <- mv_dist.var_names(prior)
+  prior_names <- mvnd.var_names(prior)
   if ( length(prior_names) != length(coef_names) & !all(prior_names %in% coef_names) ) {
     #can occur ie when updating to a new formula with fewer terms
     if ( all(coef_names %in% prior_names) ){
       message('prior contains more variables than the model : variables not used in the model are ignored in the fit')
-      prior <- mv_dist.subset(prior, colnames(matrix))
+      prior <- mvnd.subset(prior, colnames(matrix))
     } else {
       missing <- coef_names[!(coef_names %in% prior_names)]
       stop(paste('model formula contains variable names not provided in the prior', missing ))
     }
   }
   
-  prior_means <- mv_dist.means(prior)
-  prior_covar <- mv_dist.covar(prior)
+  prior_means <- mvnd.means(prior)
+  prior_covar <- mvnd.covar(prior)
   prior_precision <- solve(prior_covar)
   
   if (missing(beta)) {
     coef_lm <- solve(t(matrix) %*% matrix) %*% t(matrix) %*% response
+    #the so-called Moore-Penrose pseudoinverse
+    
     beta <- 1/(sum((response - drop(matrix %*% coef_lm))^2)/df)
-    #covar <- solve( prior_precision + t(matrix) %*% matrix )
-    
-    #means <- covar %*% 
-    ##  drop(prior_precision %*% prior_means + 
-    #         t(matrix) %*% matrix(response,ncol=1))
-    
-    #beta <- 1/(sum((response - drop(matrix %*% means))^2)/df)
-    
-  } #else {
-    covar <- solve(prior_covar + beta * t(matrix) %*% matrix)
-    means <- beta * covar %*% t(matrix) %*% response
-  #}
+  }
   
-  posterior <- distribution(mv_dist(means, covar))
+  covar <- solve(prior_covar + beta * t(matrix) %*% matrix)
+  means <- beta * covar %*% t(matrix) %*% response
+  
+  posterior <- distribution(mvnd(means, covar))
   
   structure(list(call = match.call(),
                         formula = formula,
@@ -276,6 +269,7 @@ update.blm <- function(object,
 #' Coefficients from the posterior distribution of a bayesian model.
 #'
 #' @param object a \code{blm} object.
+#' @param covar return the covariance matrix instead of estimates for the coefficients?
 #' @param ... other arguments (currently ignored).
 #' 
 #' @return A named vector for the maxium a posteriori likelihood of coefficients. 
@@ -294,8 +288,56 @@ update.blm <- function(object,
 #' coefficients(model)
 #' 
 #' @export 
-coef.blm <- function(object, ...){
-  mv_dist.means(object$posterior)
+coef.blm <- function(object, covar = FALSE, ...){
+  if (covar) {
+    mvnd.covar(object$posterior)
+  }  else {
+    mvnd.means(object$posterior)
+  }
+}
+
+
+
+#' Precision
+#' 
+#' Precision of error of a bayesian model.
+#'
+#' @param object a \code{blm} object.
+#' @param ... other arguments (currently ignored).
+#' 
+#' @return The precision used for the \code{\link{blm}} object.
+#'  
+#' @examples
+#' x <- rnorm(10)
+#' b <- 1.3
+#' w0 <- 0.2 ; w1 <- 3
+#' y <- rnorm(10, mean = w0 + w1 * x, sd = sqrt(1/b))
+#' 
+#' #precision provided as argument
+#' model <- blm(y ~ x, beta = b)
+#' precision(model)
+#' 
+#' #precision estimated from the data
+#' model2 <- blm(y ~ x)
+#' precision(model2)
+#' 
+#' @export 
+precision <- function(object, ...){
+  object$beta
+}
+
+
+
+#' Model Matrix
+#' 
+#' Model matrix for \code{\link{blm}} object.
+#'
+#' @param object a \code{blm} object.
+#' @param ... other arguments (currently ignored).
+#' 
+#' @export 
+model.matrix.blm <- function(object, ...){
+  object$matrix
 }
 
 
@@ -322,7 +364,7 @@ coef.blm <- function(object, ...){
 #' 
 #' @export 
 covar.blm <- function(object, ...){
-  mv_dist.covar(object$posterior)
+  mvnd.covar(object$posterior)
 }
 
 
@@ -367,7 +409,7 @@ confint.blm <- function (object,
   }
   
   cf <- coef(object)[parm]
-  cf_var <- diag(covar.blm(object))[parm]
+  cf_var <- diag(coef(object, covar=T))[parm]
   
   l <- (1-level)/2
   lower <- qnorm(l, cf, sqrt(cf_var))
@@ -391,11 +433,18 @@ confint.blm <- function (object,
 #' @param newdata an optional data frame containing variables with which to 
 #'   predict. If missing, values used for fitting will be extracted from the 
 #'   object.
-#' @param report.var report also variance for the predicted values.
+#' @param se.fit report also standard deviation for the predicted values.
+#' @param interval Type of interval calculation, currently only \code{none} and \code{confidence} implemented.
+#' @param level confidence level for interval calculation.
 #' @param ... other arguments (currently ignored).
 #' 
-#' @return A vector of predicted values. If report.var = TRUE, a list containing
-#'   means and variances of the predicted values.
+#' @return A vector of predicted \code{fit} values. If \code{se.fit = TRUE}, a
+#'   named list containing the fit values under \code{$fit} and standard
+#'   deviations of the fit values under \code{$se.fit}. If \code{interval =
+#'   "confidence"}, pseudo-confidence interval, ie lower and upper bounds of
+#'   quantiles of the fit distrib ution are provided at \code{level} for the fit
+#'   values are provided with \code{$fit} as data.frame with columns
+#'   \code{$fit}, \code{$lwr}, \code{$upr}.
 #'  
 #' @examples
 #'   x <- rnorm(100)
@@ -406,32 +455,50 @@ confint.blm <- function (object,
 #'   
 #'   predict(model)
 #'   
+#'   #with standard deviation"of the fit distribution
+#'   predict(model, se.fit=TRUE) 
+#'   
+#'   #with "confidence interval" of the fit values
+#'   predict(model, interval = 'confidence', level = .95) 
+#'   
+#'   #predict for new explanatory values
 #'   x <- rnorm(10) 
 #'   predict(model, data.frame(x=x))
 #' 
 #' @export
-predict.blm <- function(object, newdata = NULL, report.var = FALSE, ...){
-  
-  if ( missing(newdata) ) {
-    return( fitted(object, report.var=report.var) )   
-  }
+predict.blm <- function(object, newdata = NULL, se.fit = FALSE, 
+                        interval = 'none', level = 0.95, ...){
   
   responseless_formula <- delete.response(terms(object$formula))
-  frame <- model.frame(responseless_formula, newdata)
-  matrix <- model.matrix(responseless_formula, frame)
   
-  means <- apply(matrix, 1, function(xi) sum(coef(object) * xi))
-  
-  if (report.var) { 
-    error_var <- 1/object$beta
-    
-    vars <- apply(matrix, 1, function(xi) 
-      error_var +  t(xi) %*% covar.blm(object) %*% xi)
-    
-    return(list(mean = means, var = vars))
+  if ( missing(newdata) ) {
+    matrix <- model.matrix(object)    
+  } else {
+    frame <- model.frame(responseless_formula, newdata)
+    matrix <- model.matrix(responseless_formula, frame)
   }
   
-  means
+  fit <- apply(matrix, 1, function(xi) sum(coef(object) * xi))
+  
+  if ( interval == 'confidence' | se.fit) {
+    error_var <- 1/precision(object)
+    
+    vars <- apply(matrix, 1, function(xi) 
+      error_var +  t(xi) %*% coef(object, covar = TRUE) %*% xi)
+  }
+  
+  if ( interval == 'confidence' ) {
+    lower <- qnorm(level, fit, sqrt(vars))
+    upper <- qnorm((1-level), fit, sqrt(vars))
+    
+    fit <- data.frame(fit=fit, lwr=lower, upr=upper)
+  }
+  
+  if (se.fit) { 
+    return(list(fit = fit, se.fit = sqrt(vars)))
+  }
+  
+  fit
 }
 
 
@@ -442,10 +509,10 @@ predict.blm <- function(object, newdata = NULL, report.var = FALSE, ...){
 #'   object.
 #'  
 #' @param object a \code{blm} object.
-#' @param report.var Report also variance for the fitted values.
+#' @param var Report also variance for the fitted values.
 #' @param ... other arguments (currently ignored).
 #'
-#' @return A vector of fitted values. If report.var = TRUE, a list containing 
+#' @return A vector of fitted values. If var = TRUE, a list containing 
 #'   means and variances of the fitted values. Identical to \code{predict.blm} 
 #'   without newdata.
 #'  
@@ -459,16 +526,16 @@ predict.blm <- function(object, newdata = NULL, report.var = FALSE, ...){
 #'   fitted(model)
 #'   
 #' @export
-fitted.blm <- function(object, report.var = FALSE, ...){
+fitted.blm <- function(object, var = FALSE, ...){
   
   responseless_formula <- delete.response(terms(object$formula))
   matrix <- model.matrix(responseless_formula, object$frame)    
   
   means <- drop(matrix %*% coef(object))
   
-  if (report.var) {
+  if (var) {
     vars <- apply(matrix, 1, function(xi) 
-      1/object$beta +  t(xi) %*% covar.blm(object) %*% xi)
+      1/object$beta +  t(xi) %*% coef(object, covar=TRUE) %*% xi)
     
     return(list(mean = means, var = vars))
   }
@@ -484,13 +551,15 @@ fitted.blm <- function(object, report.var = FALSE, ...){
 #'  model.
 #'  
 #' @param object a \code{blm} object.
+#' @param var Report also variance for the fitted values.
 #' @param ... other arguments (currently ignored).
 #' 
 #' @return Residuals of the \code{blm} object.
 #'  
 #' @details Residuals are extracted from the maxium a posterior estimate of the 
-#'   \code{blm} object.
-#'  
+#'   \code{blm} object. If var = TRUE, a list containing means and variances of
+#'   the fitted values.
+#'   
 #' @examples
 #'   x <- rnorm(10)
 #'   b <- 1.3
@@ -502,14 +571,19 @@ fitted.blm <- function(object, report.var = FALSE, ...){
 #'   resid(model)
 #'   
 #' @export 
-residuals.blm <- function(object, ...){
+residuals.blm <- function(object, var = FALSE, ...){
   frame <- object[['frame']]
   response_col <- attr(terms(frame), 'response')
   response <- frame[, response_col]
   
-  prediction <- fitted.blm(object, report.var = F)
+  prediction <- fitted.blm(object, var = T)
   
-  response - prediction
+  if (var) {
+    return(list(mean = response - prediction$mean, var = prediction$var))
+  } else {
+    return(response - prediction$mean)
+  }
+  
 }
 
 

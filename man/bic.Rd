@@ -38,15 +38,28 @@ b <- 0.3
 w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
 
 y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
-model <- blm(y ~ x + sin(x), prior = NULL, data = data.frame(x=x, y=y))
+mod1 <- blm(y ~ x + sin(x))
 
-plot(model, xlim=c(-10,10)) 
-bic(model) ## 221.6777
+\dontrun{
+  plot(mod1, xlim=c(-10,10)) 
+}
+bic(mod1) ## 224.351
 
-#another model removing the sinus term 
-model2 <- blm(y ~ x, prior = NULL, data = data.frame(x=x, y=y))
+#another mod removing the sinus term, clearly less well fitting
+mod2 <- blm(y ~ x)
 
-bic(model2) ## 805.4814
+bic(mod2) ## 805.5729 -> huge difference in bic
+
+##much less distinguished model
+b <- 0.003
+y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
+mod1 <- blm(y ~ x + sin(x))
+\dontrun{
+  plot(mod1, xlim=c(-10,10)) 
+}
+mod2 <- blm(y ~ x)
+bic(mod1) #1209.717
+bic(mod2) #1215.66 ... still positive support but not strong
   
 }
 

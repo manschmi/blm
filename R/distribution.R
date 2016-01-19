@@ -14,17 +14,17 @@
 #' } 
 #' 
 #' @examples
-#' mv_dist(c(0,1),matrix(c(2,3,3,2),ncol=2))
+#' mvnd(c(0,1),matrix(c(2,3,3,2),ncol=2))
 #' 
 #' @export
-mv_dist <- function(means, covar, var_names, ...){
+mvnd <- function(means, covar, var_names, ...){
   
   d <- structure(list(means = drop(means), 
                  covar = drop(covar)),
-            class = 'mv_dist')
+            class = 'mvnd')
   
   if ( !missing(var_names) ) {
-    d <- mv_dist.set_var_names(d, var_names)
+    d <- mvnd.set_var_names(d, var_names)
   }
   
   d
@@ -34,13 +34,13 @@ mv_dist <- function(means, covar, var_names, ...){
 
 #' Means
 #' 
-#' Means of multivariate normal distribution object of class \code{mv_dist}.
+#' Means of multivariate normal distribution object of class \code{mvnd}.
 #' 
-#' @param d object of class \code{\link{mv_dist}}.
+#' @param d object of class \code{\link{mvnd}}.
 #' @param ... other arguments (currently ignored).
 #' 
 #' @export
-mv_dist.means <- function(d, ...){
+mvnd.means <- function(d, ...){
   d$means
 }
 
@@ -49,13 +49,13 @@ mv_dist.means <- function(d, ...){
 #' Covariance
 #' 
 #' Covariance matrix of multivariate normal distribution object of class 
-#'  \code{mv_dist}.
+#'  \code{mvnd}.
 #' 
-#' @param d object of class \code{\link{mv_dist}}.
+#' @param d object of class \code{\link{mvnd}}.
 #' @param ... other arguments (currently ignored).
 #'
 #' @export
-mv_dist.covar <- function(d, ...){
+mvnd.covar <- function(d, ...){
   d$covar
 }
 
@@ -63,13 +63,13 @@ mv_dist.covar <- function(d, ...){
 #' Variable Names from a Multivariate Normal Distribution
 #' 
 #' Names of the variables of a multivariate normal distribution object of class 
-#'  \code{mv_dist}.
+#'  \code{mvnd}.
 #' 
-#' @param d object of class \code{\link{mv_dist}}.
+#' @param d object of class \code{\link{mvnd}}.
 #' @param ... other arguments (currently ignored).
 #'
 #' @export
-mv_dist.var_names <- function(d, ...){
+mvnd.var_names <- function(d, ...){
   names(d$means)
 }
 
@@ -77,14 +77,14 @@ mv_dist.var_names <- function(d, ...){
 #' Set variable Names from a Multivariate Normal Distribution
 #' 
 #' Set the names of the variables of a multivariate normal distribution object
-#' of class \code{mv_dist}.
+#' of class \code{mvnd}.
 #' 
-#' @param d object of class \code{\link{mv_dist}}.
+#' @param d object of class \code{\link{mvnd}}.
 #' @param var_names names of the variables of the distributions.
 #' @param ... other arguments (currently ignored).
 #'
 #' @export
-mv_dist.set_var_names <- function(d, var_names, ...){
+mvnd.set_var_names <- function(d, var_names, ...){
   names(d$means) <- var_names
   
   if ( length(d$means) > 1 ) {
@@ -102,22 +102,47 @@ mv_dist.set_var_names <- function(d, var_names, ...){
 #' Subset a Multivariate Normal Distribution
 #' 
 #' Return subset of variables of a multivariate normal distribution object of
-#' class \code{mv_dist}.
+#' class \code{mvnd}.
 #' 
-#' @param object an object of class \code{mv_dist}.
-#' @param subset names or indices of variables to extract from mv_dist.
+#' @param object an object of class \code{mvnd}.
+#' @param subset names or indices of variables to extract from mvnd.
 #'   
 #' @examples
-#' d <- mv_dist(c(0,1),matrix(c(2,3,3,2),ncol=2), c('a', 'b'))
-#' mv_dist.subset(d, 1)
-#' mv_dist.subset(d, 'b')
+#' d <- mvnd(c(0,1),matrix(c(2,3,3,2),ncol=2), c('a', 'b'))
+#' mvnd.subset(d, 1)
+#' mvnd.subset(d, 'b')
 #' 
 #' @export
-mv_dist.subset <- function(object, subset){
+mvnd.subset <- function(object, subset){
   object$means <- object$means[subset]
   object$covar <- object$covar[subset,subset]
   object
 }
+
+
+
+#' Mahalanobis Distance
+#' 
+#' Returns the Mahalanobis distance of a data point to a multivariate normal
+#' distribution object of class \code{mvnd}.
+#' 
+#' @param object an object of class \code{mvnd}.
+#' @param x a data point, provided as vector with same length as dimensions of
+#'   the \code{mvnd} object.
+#' 
+#' @details Calls the base mahalanobis function \code{mahalanobis(x,
+#'   object$means, object$covar)}
+#'   
+#' @examples
+#' d <- mvnd(c(0,1),matrix(c(2,3,3,2),ncol=2), c('a', 'b'))
+#' mahal(d, c(1,1))
+#' mahal(d, c(0,2))
+#' 
+#' @export
+mahal <- function(object, x){
+  mahalanobis(x, object$means, object$covar)
+}
+
 
 
 #' Distribution

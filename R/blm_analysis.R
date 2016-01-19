@@ -3,7 +3,7 @@
 
 
 
-#' Probability of Response 
+#' Model Probability
 #' 
 #' Probability of observing the response given a (bayesian) linear regression
 #' model.
@@ -81,23 +81,22 @@ pblm <- function(object, a_prior = 1, b_prior = 1, use_log = TRUE){
 #' x <- seq(-10,10,.1) 
 #' b <- 0.3
 #' 
-#' w0 <- 20 ; w1 <- 3 ; w2 <- 10
+#' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
 #' 
 #' y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
-#' model <- blm(y ~ x + sin(x), prior = NULL, data = data.frame(x=x, y=y))
+#' mod1 <- blm(y ~ x + sin(x))
 #' 
-#' plot(model, xlim=c(-10,10)) 
-#' pblm(model) ## -955.8591 this is the log-probability
+#' pblm(mod1) ## -886.4801 this is the log-probability (log=TRUE by default)
 #' 
 #' #another model removing the sinus term 
-#' model2 <- blm(y ~ x, prior = NULL, data = data.frame(x=x, y=y))
+#' mod2 <- blm(y ~ x)
 #' 
-#' pblm(model2) ## -958.128 
-#' bayes_factor(model, model2) #9.668859
+#' pblm(mod2) ## -891.0581 
+#' bayes_factor(mod1, mod2) #97.31074 #strong support for mod1 over mod2
 #' 
-#' model3 <- blm(y ~ x + 0, prior = NULL, data = data.frame(x=x, y=y))
-#' pblm(model3) ## -960.2644
-#' bayes_factor(model, model3) #137.592
+#' mod3 <- blm(y ~ x + 0)
+#' pblm(mod3) ## -891.842
+#' bayes_factor(mod1, mod3) #213.128 #very strong support for mod1 over mod3
 #' 
 #' @export
 bayes_factor <- function(model1, model2) {
@@ -136,20 +135,33 @@ bayes_factor <- function(model1, model2) {
 #' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
 #' 
 #' y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
-#' model <- blm(y ~ x + sin(x), prior = NULL, data = data.frame(x=x, y=y))
+#' mod1 <- blm(y ~ x + sin(x))
 #' 
-#' plot(model, xlim=c(-10,10)) 
-#' bic(model) ## 221.6777
+#' \dontrun{
+#'   plot(mod1, xlim=c(-10,10)) 
+#' }
+#' bic(mod1) ## 224.351
 #' 
-#' #another model removing the sinus term 
-#' model2 <- blm(y ~ x, prior = NULL, data = data.frame(x=x, y=y))
+#' #another mod removing the sinus term, clearly less well fitting
+#' mod2 <- blm(y ~ x)
 #' 
-#' bic(model2) ## 805.4814
+#' bic(mod2) ## 805.5729 -> huge difference in bic
+#' 
+#' ##much less distinguished model
+#' b <- 0.003
+#' y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
+#' mod1 <- blm(y ~ x + sin(x))
+#' \dontrun{
+#'   plot(mod1, xlim=c(-10,10)) 
+#' }
+#' mod2 <- blm(y ~ x)
+#' bic(mod1) #1209.717
+#' bic(mod2) #1215.66 ... still positive support but not strong
 #'   
 #' @export 
 bic <- function(object, ...){
-  k <- ncol(object$matrix)
-  n <- nrow(object$frame)
+  k <- ncol(model.matrix(object))
+  n <- nrow(model.frame(object))
   
   n * log( deviance(object) / n ) + k * log(n)
 }

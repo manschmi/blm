@@ -56,7 +56,7 @@ test_that(paste("Distribution of a blm fit reflects the precision of the model u
 
 
 seed <- as.integer(1000 * rnorm(1))
-test_that(paste("Precision of predicted values drops with distance to data points using seed", seed), {
+test_that(paste("Variance of predicted values increases with distance to data points using seed", seed), {
   
   w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
   x <- rnorm(100)
@@ -64,7 +64,33 @@ test_that(paste("Precision of predicted values drops with distance to data point
   mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
   
   x2 <- 0:100
-  y2 <- predict(mod, data.frame(x=x2), report.var=T)
+  y2 <- predict(mod, data.frame(x=x2), var=T)
   expect_equal(cor(x2, y2$var, method='spearman'),1)
 
 })
+
+
+
+seed <- as.integer(1000 * rnorm(1))
+test_that(paste("Roughly 66% of random sampled data using model parameters falls into fitted values +/- sqrt(var) using seed", seed), {
+w0 <- 1
+w1 <- 2
+x <- seq(-100,100,10)
+b <- 0.001
+y <- w0 + w1*x + rnorm(length(x), mean=0, sd=sqrt(1/b) )
+blm_mod_with_b <- blm(y~x, beta = b)
+
+test <- function(){
+  y <- w0 + w1*x + rnorm(length(x), mean=0, sd=sqrt(1/b) )
+  fits <- fitted(blm_mod_with_b, var=T)
+  fits$sd <- sqrt(fits$var)
+  pos <- vapply(seq_along(y), function(i) ifelse( (y[i] >= fits$mean[i] - fits$sd[i]) &
+                                                    (y[i] <= fits$mean[i] + fits$sd[i]),
+                                                  TRUE, FALSE), TRUE )
+  sum(pos)/length(pos)
+}
+tests <- replicate(10000, test())
+
+expect_equal(mean(tests), .65, tolerance = .1)
+})
+
