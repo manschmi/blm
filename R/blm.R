@@ -158,13 +158,12 @@ blm <- function(formula, prior = NULL, beta, ...) {
   
   if (missing(beta)) {
     coef_lm <- solve(t(matrix) %*% matrix) %*% t(matrix) %*% response
-    #the so-called Moore-Penrose pseudoinverse
     
     beta <- 1/(sum((response - drop(matrix %*% coef_lm))^2)/df)
   }
   
   covar <- solve(prior_covar + beta * t(matrix) %*% matrix)
-  means <- beta * covar %*% t(matrix) %*% response
+  means <- covar %*% (solve(prior_covar) %*% prior_means + beta * t(matrix) %*% response)
   
   posterior <- distribution(mvnd(means, covar))
   

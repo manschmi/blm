@@ -57,7 +57,14 @@ $$\boldsymbol{\mu_{x,y}} = \mathbf{\Lambda_{x,y}^{-1}} (\boldsymbol{\mu_{0}}\mat
 
 
 This is somewhat odd. The solution form Wikipedia apperently does not consider error precision in the calculations. That is, the precision of the posterior coefficients would not be influenced by the precision of the data. By contrast, equations of the posterior means by Thomas does not consider the prior means when computing the posterior MAP values, ie this solution is possibly only correct when $\boldsymbol{\mu_{0}}=0$.   
-The solution used in the *blm* function of the *blmr* package implements the equations as given by Thomas.
+
+I found this 'combined' formulas from free available course material (http://gandalf.psych.umn.edu/users/schrater/schrater_lab/courses/PattRecog09/BayesRegress.pdf) from Paul Schrater (University of Minnesota):
+
+$$\mathbf{\Lambda_{x,y}}=\beta \textbf{$\Theta$}_\textbf{x}^T\textbf{$\Theta$}_\textbf{x} + \mathbf{\Lambda_{0}}$$
+
+$$\boldsymbol{\mu_{x,y}} = \mathbf{\Lambda_{x,y}^{-1}} (\boldsymbol{\mu_{0}}\mathbf{\Lambda_{0}}+ \beta \textbf{$\Theta$}_\textbf{x}^T\textbf{y})$$
+
+The solution used in the *blm* function of the *blmr* package implements the equations as given by Paul Schrater.
 
 
 
@@ -124,7 +131,7 @@ blm(y~x, prior=blm_mod)
 When precision of the error $\beta$ is not provided it is estimated from the data using the deviance of the observed y values from the lm (ie MLE) fit using the following equation: 
 $$\textit{1. MLE coefficients:  } \textbf{w} = (\textbf{$\Theta$}_\textbf{x}^T\textbf{$\Theta$}_\textbf{x})^{-1}\textbf{$\Theta$}_\textbf{x}^T\textbf{y}$$
 $$\textit{2. MLE residuals:  } \textbf{RSS} = \textbf{y} - \textbf{w}\textbf{$\Theta$}_\textbf{x}$$.
-$$\textit{3. precision:  }  \beta = \left({\frac{\sum{\textbf{RSS}}}{n-p}}\right)^{-1}$$
+$$\textit{3. precision:  }  \beta = \left({\frac{\sum{\mathbf{RSS^2}}}{n-p}}\right)^{-1}$$
 
 Pretty straightforward, simply do the MLE fit, get the variance of the residuals using degrees of freedom of the regression model.
 
@@ -484,4 +491,3 @@ deviance(mod3)
 deviance(mod2)
 deviance(mod)
 ```
-Surprisingly, the deviance is stable after the 2nd round of updating. Not analyzed further.
