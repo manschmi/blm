@@ -18,19 +18,58 @@ This vignette describes varies functionalities of the blmr package.
 The blmr package allows for fitting of Bayesian Linear Models *blm* to data. The fit is stored in a S3 object of class *blm*. The package includes many generic functions available for Linear Model *lm* objects (coef, resid, ...). The plotting function is designed to visualize the blm model together with the data. At the end I also implemented a few functions for analysis of blm objects.
 
 
+### Core Functions Math
+I don't provide example data but rather demonstrate functionality using random data. 
+The basic linear regression model is described by the formula:
+$$y = w_0 + w_1*x + \epsilon$$
+
+However, this can easily be generalized to fit an arbitraty number of additive terms:
+$$ \textbf{y} = \textbf{w}*\textbf{$\Theta$}_\textbf{x} + \boldsymbol{\epsilon} $$
+
+where:  
+$\mathbf{\Theta_{x}}$ is the design matrix.   
+$\textbf{w}$ is the vector of coefficients, ie the weights on the design matrix columns.  
+$\boldsymbol{\epsilon}$ is the vector of errors on the observables.  
+$\textbf{y}$ vector of observed values.  
+
+
+Frequentist solution for fitting linear models is to minimize the sum of squared residuals (ie the sum of squared distance between observed and fitted y values). There is a very elegant solution for this problem using matrix algebra (the so-called Moore-Penrose pseudoinverse):
+$$\textbf{w} = (\textbf{$\Theta$}_\textbf{x}^T\textbf{$\Theta$}_\textbf{x})^{-1}\textbf{$\Theta$}_\textbf{x}^T\textbf{y} $$
+
+For a bayesian approach one needs to consider not the best fit, but a likelihood distribution of coefficients that updates a $prior$ distribution of the weights. For simplicity, both prior and likelihood are considered normal distributed.
+  
+Prior:
+$$\mathbf{w_{0}} = N(\boldsymbol{\mu_{0}}, \sigma^2 \mathbf{\Lambda_{0}^{-1}})$$
+
+Posterior:
+$$\mathbf{w_{x,y}} = N(\boldsymbol{\mu_{x,y}}, \sigma^2 \mathbf{\Lambda_{x,y}^{-1}})$$
+  
+
+Thomas provided the following equations (slightly transformed for consistency):
+$$\mathbf{\Lambda_{x,y}} = \beta \textbf{$\Theta$}_\textbf{x}^T \textbf{$\Theta$}_\textbf{x} + \mathbf{\Lambda_{0}}$$
+and
+$$\boldsymbol{\mu_{x,y}} = \beta \mathbf{\Lambda_{x,y}^{-1}} \textbf{$\Theta$}_\textbf{x}^T \textbf{y})$$
+
+
+Wikipedia (https://en.wikipedia.org/wiki/Bayesian_linear_regression) suggests the following equation:
+$$\mathbf{\Lambda_{x,y}}=\textbf{$\Theta$}_\textbf{x}^T\textbf{$\Theta$}_\textbf{x} + \mathbf{\Lambda_{0}}$$
+
+$$\boldsymbol{\mu_{x,y}} = \mathbf{\Lambda_{x,y}^{-1}} (\boldsymbol{\mu_{0}}\mathbf{\Lambda_{0}}+ \textbf{$\Theta$}_\textbf{x}^T\textbf{y})$$
+
+
+This is somewhat odd. The solution form Wikipedia apperently does not consider error precision in the calculations. ie the precision of the posterior coefficients would not be influenced by the precision of the data. By contrast, equations of the posterior means by Thomas does not consider the prior means when computing the posterior MAP values, ie this solution is possibly only correct when $\boldsymbol{\mu_{0}=0$.   
+The solution used in the *blm* function of the *blmr* package implements the equations as given by Thomas.
+
+
+
 Install and load the package:
 ```{r load the library}
 #devtools::install_github('manschmi/blmr')
 library(blmr)
-library(knitr) #for kable
 ```
 
 
 ## Fitting a Bayesian Model
-
-I don't provide example data but rather demonstrate functionality using random data. 
-The basic linear model would be like:
-$$y = w_0 + w_1*x + \epsilon$$
 
 To simlulate a simple linear regression problem we use:
 ```{r simple model data}
@@ -242,7 +281,7 @@ One can also add the blm fit lines using stat_smooth for ggplot2 plots. Note: th
 
 
 ```{r}
-library(ggplot)
+library(ggplot2)
 d <- data.frame(x=x, y=y)
 ggplot(d, aes(x=x, y=y)) +
   geom_point() +
