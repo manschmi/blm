@@ -10,12 +10,12 @@ vignette: >
 ---
 
 ## Note
-The blmr package was created as part of a DataScience course at Aarhus University and is NOT intended for use. Expecially correct handling of data precision is not finally confirmed.
+The blmr package was created as part of a DataScience course at Aarhus University and is NOT intended for use. Expecially correct handling of prior means and data precision is not guaranteed.
 
 
 ## Introduction
-This vignette describes varies functionalities of the blmr package.
-The blmr package allows for fitting of Bayesian Linear Models *blm* to data. The fit is stored in a S3 object of class *blm*. The package includes many generic functions available for Linear Model *lm* objects (coef, resid, ...). The plotting function is designed to visualize the blm model together with the data. At the end I also implemented a few functions for analysis of blm objects.
+This vignette describes various functionalities of the blmr package.
+The blmr package allows for fitting of Bayesian Linear Models to data. The fit is stored in an S3 object of class *blm*. The package includes many generic functions available for Linear Model *lm* objects (coef, resid, ...). The plotting function is designed to visualize the blm model together with the data. At the end I also implemented a few functions for analysis of blm objects.
 
 
 ### Core Functions Math
@@ -45,9 +45,8 @@ Posterior:
 $$\mathbf{w_{x,y}} = N(\boldsymbol{\mu_{x,y}}, \sigma^2 \mathbf{\Lambda_{x,y}^{-1}})$$
   
 
-Thomas provided the following equations (slightly transformed for consistency):
+Thomas provided the following equations for updating (slightly transformed for consistency):
 $$\mathbf{\Lambda_{x,y}} = \beta \textbf{$\Theta$}_\textbf{x}^T \textbf{$\Theta$}_\textbf{x} + \mathbf{\Lambda_{0}}$$
-and
 $$\boldsymbol{\mu_{x,y}} = \beta \mathbf{\Lambda_{x,y}^{-1}} \textbf{$\Theta$}_\textbf{x}^T \textbf{y})$$
 
 
@@ -57,21 +56,22 @@ $$\mathbf{\Lambda_{x,y}}=\textbf{$\Theta$}_\textbf{x}^T\textbf{$\Theta$}_\textbf
 $$\boldsymbol{\mu_{x,y}} = \mathbf{\Lambda_{x,y}^{-1}} (\boldsymbol{\mu_{0}}\mathbf{\Lambda_{0}}+ \textbf{$\Theta$}_\textbf{x}^T\textbf{y})$$
 
 
-This is somewhat odd. The solution form Wikipedia apperently does not consider error precision in the calculations. ie the precision of the posterior coefficients would not be influenced by the precision of the data. By contrast, equations of the posterior means by Thomas does not consider the prior means when computing the posterior MAP values, ie this solution is possibly only correct when $\boldsymbol{\mu_{0}=0$.   
+This is somewhat odd. The solution form Wikipedia apperently does not consider error precision in the calculations. That is, the precision of the posterior coefficients would not be influenced by the precision of the data. By contrast, equations of the posterior means by Thomas does not consider the prior means when computing the posterior MAP values, ie this solution is possibly only correct when $\boldsymbol{\mu_{0}}=0$.   
 The solution used in the *blm* function of the *blmr* package implements the equations as given by Thomas.
 
 
 
-Install and load the package:
+## To install and load the package:
 ```{r load the library}
 #devtools::install_github('manschmi/blmr')
 library(blmr)
+library(ggplot2)
 ```
 
 
 ## Fitting a Bayesian Model
 
-To simlulate a simple linear regression problem we use:
+To simlulate a simple linear regression problem I use the model data:
 ```{r simple model data}
 set.seed(0)
 w0 <- 1
@@ -98,7 +98,7 @@ lm_mod
 
 
 We can easily visualize this (more on the plotting function later):
-```{r plot early easy models}
+```{r plot early easy models, fig.width=7}
 plot(blm_mod, legend_parm=list(cex=.5))
 ```
 
@@ -142,12 +142,12 @@ blm(y~x, beta=b)
 
 Compared to test without providing precision (ie where it is estimated from the data):
 ```{r to be used in tests2c....}
-blm(y~x, beta = b)
+blm(y~x)
 ````
 
 The MAP and covariance values are very close although not exactly the same.
 Lets check it out on a plot:
-```{r}
+```{r, fig.width=7, fig.height=5}
 plot(blm(y~x), legend_parm=list(cex=.5))
 abline(blm(y~x, beta = b), col='green', lwd=3)
 abline(lm(y~x), col='orange', lwd=3)
@@ -156,17 +156,17 @@ abline(lm(y~x), col='orange', lwd=3)
 
 ## The *blm* object
 
-The blm object contains the following slots. The most important of these can be accessed via generic or blm-specific functions (in paranthesis).
-call: the matched call ( no fun )
-formula: the formula used ( formula() )
-df.residual: the degrees of freedom of the model ( df.residual() )
-frame: the model frame used ( model.frame() )
-matrix: the model matrix used ( model.matrix() )
-beta: the precision of the data ( precision() )
-prior: the prior distribution used ( no fun )
-posterior: the posterior distribution ( coef(), coef( , var=TRUE) )
+The blm object contains the following slots. The most important of these can be accessed via generic or blm-specific functions (in paranthesis).  
+call: the matched call ( no fun )  
+formula: the formula used ( formula() )  
+df.residual: the degrees of freedom of the model ( df.residual() )  
+frame: the model frame used ( model.frame() )  
+matrix: the model matrix used ( model.matrix() )  
+beta: the precision of the data ( precision() )  
+prior: the prior distribution used ( no fun )  
+posterior: the posterior distribution ( coef(), coef( , var=TRUE) )  
 
-
+  
 The coef() (or coefficients() ) returns by default only the MAP estimate of the coefficients.
 ```{r}
 coef(blm_mod)
@@ -182,21 +182,39 @@ coef(blm_mod, covar=TRUE)
 Again, this is done using generic functions.
 So far those are implemented:
 
-resid, residual\cr
-deviance\cr
-fitted\cr
-predict\cr
-confint\cr
+resid, residual  
+deviance  
+fitted  
+predict  
+confint  
 
 
-#### fitted, predict and residuals
-For fitted, predict and residuals it is possible to retrieve the variance of the esimate (same as the variance for the fitted values they are calculated from) together with the MAP estimate using parameter *var = TRUE*.
+#### fitted and residuals
+For fitted and residuals it is possible to retrieve the variance of the esimate (same as the variance for the fitted values they are calculated from) together with the MAP estimate using parameter *var = TRUE*.
 ```{r}
 fitted(blm_mod)
 
 fitted(blm_mod, var=TRUE)
+
+resid(blm_mod)
+
+resid(blm_mod, var=TRUE)
 ```
 
+
+
+#### predict
+The implementation of predict is different to provide consistency with *predict.lm* and uses the arguments *se.fit* and *interval*. *se.fit* values are computed as $\sqrt{\sigma^2}$ of the fitted values. Confidence interval are the quantiles from the predicted distribution.
+
+```{r}
+predict(blm_mod)
+
+predict(blm_mod, se.fit=TRUE)
+
+predict(blm_mod, se.fit=TRUE, interval='confidence')
+```
+
+This is inconsistent with fitted and resid. However, importantly, this allows native adding of a blm fit to ggplot2 objects just like lm fit (see below under *Plotting*)
 
 
 #### confint
@@ -219,7 +237,7 @@ new_mod <- update(blm_mod, data=data.frame(x=x2, y=y2))
 new_mod
 ```
 As can be seen the posterior of the input model blm_mod is used as prior for the updated model in this case.
-If we won't the updated model to use the same prior, this needs to be specified:
+If we want the updated model to use the same prior, this needs to be specified:
 ```{r}
 update(blm_mod, prior=blm_mod$prior, data=data.frame(x=x2, y=y2)) 
 ```
@@ -228,6 +246,8 @@ We can also update the formula. Typically this involves dropping factors.
 ```{r}
 update(blm_mod, y~x+0, prior=blm_mod$prior, data=data.frame(x=x2, y=y2)) 
 ```
+As you can see there is a warning that factors are dropped.
+
 
 And this can be done using R formula update semantics.
 ```{r}
@@ -235,13 +255,16 @@ update(blm_mod, ~.+0, prior=blm_mod$prior, data=data.frame(x=x2, y=y2))
 ```
 
 
+Note: one cannot (in the current implementation) update to more complex models.
+
+
 
 ## Plotting
 
-The function plot.blm produces a single plot of the data points, together with the blm MAP estimate, the 95% quantile and the lm fits.
+The function plot.blm produces a single plot of the data points, together with the blm MAP estimate, the 95% quantile and the lm fits. Note the *legend_parm* passes named arguments to legend. The *cex=.5* is to make prettier plots in the vignette.
 
 ```{r}
-plot(blm_mod)
+plot(blm_mod, legend_parm=list(cex=.5))
 ```
 
 
@@ -250,14 +273,14 @@ There is a little catch here. The blm object does not store the raw data used to
 ```{r}
 w0 <- .2
 w1 <- 3
-x <- seq(-100,100,1)
+x <- seq(-10,10,1)
 b <- 1.3
 y <- w0 + w1*cos(x) + rnorm(length(x), mean=0, sd=sqrt(1/b) )
 
 model <- blm(y ~ cos(x), prior = NULL, beta = b, data = data.frame(x=x, y=y))
 #plot(model) fails due to 'lack' of x in the 'model' object
 
-plot(model, explanatory='x')
+plot(model, explanatory='x', legend_parm=list(cex=.5))
 ```
 
 
@@ -281,11 +304,20 @@ One can also add the blm fit lines using stat_smooth for ggplot2 plots. Note: th
 
 
 ```{r}
-library(ggplot2)
 d <- data.frame(x=x, y=y)
+
 ggplot(d, aes(x=x, y=y)) +
   geom_point() +
-  stat_smooth(method='blm')
+  stat_smooth(method='blm', fill='blue', colour='blue') +
+  stat_smooth(method='lm', fill='red', colour='red')
+```
+
+
+Of course, one can pass additional arguments to blm from within stat_smooth:
+```{r}
+ggplot(d, aes(x=x, y=y)) +
+  geom_point() +
+  stat_smooth(method='blm', formula=y~cos(x), beta=1)
 ```
 
 
@@ -339,14 +371,14 @@ y <- w0 + w1*x + w2*x^2 + rnorm(length(x), mean=0, sd=sqrt(1/b) )
 
 mod <- blm(y ~ x + I(x^2), prior = NULL, beta = b, data = data.frame(x=x, y=y))
 summary(mod)
-plot(mod, pch=19, xlim=c(-15,15), ylim=c(-200,2000))
+plot(mod, pch=19, xlim=c(-15,15), ylim=c(-200,2000), legend_parm=list(cex=.5))
 ```
 
 or also:
 ```{r}
 mod <- blm(y ~ poly(x,2, raw=TRUE), prior = NULL, beta = b, data = data.frame(x=x, y=y))
 summary(mod)
-plot(mod, explanatory='x',pch=19, xlim=c(-15,15), ylim=c(-200,2000))
+plot(mod, explanatory='x',pch=19, xlim=c(-15,15), ylim=c(-200,2000), legend_parm=list(cex=.5))
 ```
 ```
 
@@ -383,7 +415,7 @@ $$ p(y|m) = \frac{1}{(2*pi)^{\frac{n}{2}}} * \sqrt{\frac{det(S_{0})}{det(S_{n})}
 
 
 ```{r}
-plot(mod1, xlim=c(-10,10)) 
+plot(mod1, xlim=c(-10,10), legend_parm=list(cex=.5)) 
 ```
 
 
@@ -405,7 +437,7 @@ y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b))
 mod1 <- blm(y ~ x + sin(x))
 bic(mod1)
 
-plot(mod1, xlim=c(-10,10))
+plot(mod1, xlim=c(-10,10), legend_parm=list(cex=.5))
 ```
 
 
@@ -426,8 +458,8 @@ w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
 x <- rnorm(100)
 y <- rnorm(100, w1 * x + w0, 1/b)
 mod <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
-plot(mod, caption='data range')
-plot(mod, xlim=c(-100,100), ylim=c(-100,100), caption='extended range')
+plot(mod, caption='data range', legend_parm=list(cex=.5))
+plot(mod, xlim=c(-100,100), ylim=c(-100,100), caption='extended range', legend_parm=list(cex=.5))
 ```
 
 
@@ -452,4 +484,4 @@ deviance(mod3)
 deviance(mod2)
 deviance(mod)
 ```
-Surprisingly, the deviance is stable after the 2nd round of updating.
+Surprisingly, the deviance is stable after the 2nd round of updating. Not analyzed further.
