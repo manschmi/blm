@@ -97,22 +97,31 @@ expect_equal(mean(tests), .65, tolerance = .1)
 
 seed <- as.integer(1000 * rnorm(1))
 test_that(paste("Self-updating using same data improves fit using seed", seed), {
-  w0 <- 1
-  w1 <- 2
-  x <- seq(-100,100,10)
-  b <- 0.001
-  y <- w0 + w1*x + rnorm(length(x), mean=0, sd=sqrt(1/b) )
+  w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
+  x <- rnorm(100)
+  y <- rnorm(100, w1 * x + w0, 1/b)
   mod1 <- blm(y~x)
   mod2 <- update(mod1)
+  mod3 <- update(mod2)
+  mod4 <- update(mod3)
   
-  dist_2_vs_prior <- mahal(mod2$posterior, mod1$prior$means)
-  dist_2_vs_1 <- mahal(mod2$posterior, coef(mod1))
+  dist_4_vs_4 <- mahal(mod4$posterior, coef(mod4))
+  dist_3_vs_4 <- mahal(mod4$posterior, coef(mod3))
+  dist_2_vs_4 <- mahal(mod4$posterior, coef(mod2))
+  dist_1_vs_4 <- mahal(mod4$posterior, coef(mod1))
+  dist_prior_vs_4 <- mahal(mod4$posterior, mod1$prior$means)
   
-  expect_equal(mahal(mod2$posterior, coef(mod2)), 0)
-  expect_lte(dist_2_vs_1, dist_2_vs_prior)
+  expect_equal(dist_4_vs_4, 0)
+  expect_lte(dist_3_vs_4, dist_2_vs_4)
+  expect_lte(dist_2_vs_4, dist_1_vs_4)
+  expect_lte(dist_1_vs_4, dist_prior_vs_4)
   
+  dev4 <- deviance(mod4)
+  dev3 <- deviance(mod3)
   dev2 <- deviance(mod2)
   dev1 <- deviance(mod1)
+  expect_lte(dev4, dev3)
+  expect_lte(dev3, dev2)
   expect_lte(dev2, dev1)
 })
 

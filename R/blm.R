@@ -162,8 +162,8 @@ blm <- function(formula, prior = NULL, beta, ...) {
     beta <- 1/(sum((response - drop(matrix %*% coef_lm))^2)/df)
   }
   
-  covar <- solve(prior_covar + beta * t(matrix) %*% matrix)
-  means <- covar %*% (solve(prior_covar) %*% prior_means + beta * t(matrix) %*% response)
+  covar <- solve( prior_precision + beta * t(matrix) %*% matrix )
+  means <- covar %*% (prior_precision %*% prior_means + beta * t(matrix) %*% response)
   
   posterior <- distribution(mvnd(means, covar))
   
