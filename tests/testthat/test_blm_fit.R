@@ -94,3 +94,26 @@ tests <- replicate(10000, test())
 expect_equal(mean(tests), .65, tolerance = .1)
 })
 
+
+seed <- as.integer(1000 * rnorm(1))
+test_that(paste("Self-updating using same data improves fit using seed", seed), {
+  w0 <- 1
+  w1 <- 2
+  x <- seq(-100,100,10)
+  b <- 0.001
+  y <- w0 + w1*x + rnorm(length(x), mean=0, sd=sqrt(1/b) )
+  mod1 <- blm(y~x)
+  mod2 <- update(mod1)
+  
+  dist_2_vs_prior <- mahal(mod2$posterior, mod1$prior$means)
+  dist_2_vs_1 <- mahal(mod2$posterior, coef(mod1))
+  
+  expect_equal(mahal(mod2$posterior, coef(mod2)), 0)
+  expect_lte(dist_2_vs_1, dist_2_vs_prior)
+  
+  dev2 <- deviance(mod2)
+  dev1 <- deviance(mod1)
+  expect_lte(dev2, dev1)
+})
+
+
