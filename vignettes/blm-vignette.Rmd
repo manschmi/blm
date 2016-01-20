@@ -24,17 +24,17 @@ The basic linear regression model is described by the formula:
 $$y = w_0 + w_1*x + \epsilon$$
 
 However, this can easily be generalized to fit an arbitraty number of additive terms:
-$$ \textbf{y} = \textbf{w}*\textbf{$\Theta$}_\textbf{x} + \boldsymbol{\epsilon} $$
+$$ \textbf{y} = \textbf{w} \textbf{$\Phi$}_\textbf{x} + \boldsymbol{\epsilon} $$
 
 where:  
-$\mathbf{\Theta_{x}}$ is the design matrix.   
+$\mathbf{\Phi_{x}}$ is the design matrix.   
 $\textbf{w}$ is the vector of coefficients, ie the weights on the design matrix columns.  
 $\boldsymbol{\epsilon}$ is the vector of errors on the observables.  
 $\textbf{y}$ vector of observed values.  
 
 
 Frequentist solution for fitting linear models is to minimize the sum of squared residuals (ie the sum of squared distance between observed and fitted y values). There is a very elegant solution for this problem using matrix algebra (the so-called Moore-Penrose pseudoinverse):
-$$\textbf{w} = (\textbf{$\Theta$}_\textbf{x}^T\textbf{$\Theta$}_\textbf{x})^{-1}\textbf{$\Theta$}_\textbf{x}^T\textbf{y} $$
+$$\textbf{w} = (\textbf{$\Phi$}_\textbf{x}^T\textbf{$\Phi$}_\textbf{x})^{-1}\textbf{$\Phi$}_\textbf{x}^T\textbf{y} $$
 
 For a bayesian approach one needs to consider not the best fit, but a likelihood distribution of coefficients that updates a $prior$ distribution of the weights. For simplicity, both prior and likelihood are considered normal distributed.
   
@@ -45,29 +45,52 @@ Posterior:
 $$\mathbf{w_{x,y}} = N(\boldsymbol{\mu_{x,y}}, \sigma^2 \mathbf{\Lambda_{x,y}^{-1}})$$
   
 
-Thomas provided the following equations for updating (slightly transformed for consistency):
-$$\mathbf{\Lambda_{x,y}} = \beta \textbf{$\Theta$}_\textbf{x}^T \textbf{$\Theta$}_\textbf{x} + \mathbf{\Lambda_{0}}$$
-$$\boldsymbol{\mu_{x,y}} = \beta \mathbf{\Lambda_{x,y}^{-1}} \textbf{$\Theta$}_\textbf{x}^T \textbf{y})$$
+
+#### Posterior Distribution of Coefficients
+Thomas provided the following equations for updating (slightly changed variable names for consistency):
+$$\mathbf{\Lambda_{x,y}} = \beta \textbf{$\Phi$}_\textbf{x}^T \textbf{$\Phi$}_\textbf{x} + \mathbf{\Lambda_{0}}$$
+$$\boldsymbol{\mu_{x,y}} = \beta \mathbf{\Lambda_{x,y}^{-1}} \textbf{$\Phi$}_\textbf{x}^T \textbf{y})$$
 
 
 Wikipedia (https://en.wikipedia.org/wiki/Bayesian_linear_regression) suggests the following equation:
-$$\mathbf{\Lambda_{x,y}}=\textbf{$\Theta$}_\textbf{x}^T\textbf{$\Theta$}_\textbf{x} + \mathbf{\Lambda_{0}}$$
+$$\mathbf{\Lambda_{x,y}}=\textbf{$\Phi$}_\textbf{x}^T\textbf{$\Phi$}_\textbf{x} + \mathbf{\Lambda_{0}}$$
 
-$$\boldsymbol{\mu_{x,y}} = \mathbf{\Lambda_{x,y}^{-1}} (\boldsymbol{\mu_{0}}\mathbf{\Lambda_{0}}+ \textbf{$\Theta$}_\textbf{x}^T\textbf{y})$$
+$$\boldsymbol{\mu_{x,y}} = \mathbf{\Lambda_{x,y}^{-1}} (\boldsymbol{\mu_{0}}\mathbf{\Lambda_{0}}+ \textbf{$\Phi$}_\textbf{x}^T\textbf{y})$$
 
 
 This is somewhat odd. The solution form Wikipedia apperently does not consider error precision in the calculations. That is, the precision of the posterior coefficients would not be influenced by the precision of the data. By contrast, equations of the posterior means by Thomas does not consider the prior means when computing the posterior MAP values, ie this solution is possibly only correct when $\boldsymbol{\mu_{0}}=0$.   
 
-I found this 'combined' formulas from free available course material (http://gandalf.psych.umn.edu/users/schrater/schrater_lab/courses/PattRecog09/BayesRegress.pdf) from Paul Schrater (University of Minnesota):
+I found this complete formulas from free available course material (http://gandalf.psych.umn.edu/users/schrater/schrater_lab/courses/PattRecog09/BayesRegress.pdf) from Paul Schrater (University of Minnesota). Similar to Thomas, with a term including the mean of the prior added to the equation for the posterior mean.
 
-$$\mathbf{\Lambda_{x,y}}=\beta \textbf{$\Theta$}_\textbf{x}^T\textbf{$\Theta$}_\textbf{x} + \mathbf{\Lambda_{0}}$$
+$$\mathbf{\Lambda_{x,y}}=\beta \textbf{$\Phi$}_\textbf{x}^T\textbf{$\Phi$}_\textbf{x} + \mathbf{\Lambda_{0}}$$
 
-$$\boldsymbol{\mu_{x,y}} = \mathbf{\Lambda_{x,y}^{-1}} (\boldsymbol{\mu_{0}}\mathbf{\Lambda_{0}}+ \beta \textbf{$\Theta$}_\textbf{x}^T\textbf{y})$$
+$$\boldsymbol{\mu_{x,y}} = \mathbf{\Lambda_{x,y}^{-1}} (\boldsymbol{\mu_{0}}\mathbf{\Lambda_{0}}+ \beta \textbf{$\Phi$}_\textbf{x}^T\textbf{y})$$
 
 The solution used in the *blm* function of the *blmr* package implements the equations as given by Paul Schrater.
 
 
+#### Distribution of Fitted/Predicted Values
+The distribution of predicted/fitted values for y is from Thomas (identical to the one provided by Schrater):
+$$p(y_{pred}|model) = N(y|\boldsymbol{\mu_{x,y}}, \frac{1}{\beta} + \textbf{$\Phi$}_\textbf{x}^T \mathbf{\Lambda_{x,y}^{-1}} \textbf{$\Phi$}_\textbf{x})$$
 
+
+#### Total Probability of a Model Fit
+
+I used a formula from Wikipedia (https://en.wikipedia.org/wiki/Bayesian_linear_regression). This equation is based on the fit and response, and the parameters for the prior and posterior inverse gamma distributions *a* and *b*.
+
+$$ p(\textbf{y}|model) = \frac{1}{(2*pi)^{\frac{n}{2}}} * \sqrt{\frac{det(\textbf{$\Phi$}_\textbf{0}^T)}{det(\textbf{$\Phi$}_\textbf{x,y}^T)}} * \frac{b_{0}^{a_{0}}}{b_{x,y}^{a_{x,y}}} * \frac{\Gamma a_{x,y}}{\Gamma a_{0}}$$
+
+where:
+$a_{0}$: prior value for the inverse gamma distribution parameter *a* (default: $a_{0} = 1$).  
+$b_{0}$: prior value for the inverse gamma distribution parameter *b* (default: $b_{0} = 1$).  
+$a_{x,y} = a_{0} + \frac{n}{2}$: posterior value for *a*.  
+$b_{x,y} = b_{0} + \frac{1}{2}(\textbf{y}^T \textbf{y} + \boldsymbol{\mu_{0}^T \Lambda_{0} \mu_{0}} + \boldsymbol{ \mu_{x,y}^T \Lambda_{x,y} \mu_{x,y}})$: posterior value for *b*.  
+
+
+The above equation leads to very small probabilities, for many models not computable in R. However, it is possible to compute the log-likelihood, and this is computed by default.
+$$ ln(p(\textbf{y}|model)) = 1 - \frac{n*ln(2*pi) + ln(det(\textbf{$\Phi$}_\textbf{0}^T)) - ln(det(\textbf{$\Phi$}_\textbf{x,y}^T))}{2} + a_{0}*ln(b_{0}) - a_{x,y}*ln(b_{x,y}) + ln(\Gamma a_{x,y}) - ln(\Gamma a_{0})$$
+
+  
 ## To install and load the package:
 ```{r load the library}
 #devtools::install_github('manschmi/blmr')
@@ -129,8 +152,8 @@ blm(y~x, prior=blm_mod)
 
 ### Precision
 When precision of the error $\beta$ is not provided it is estimated from the data using the deviance of the observed y values from the lm (ie MLE) fit using the following equation: 
-$$\textit{1. MLE coefficients:  } \textbf{w} = (\textbf{$\Theta$}_\textbf{x}^T\textbf{$\Theta$}_\textbf{x})^{-1}\textbf{$\Theta$}_\textbf{x}^T\textbf{y}$$
-$$\textit{2. MLE residuals:  } \textbf{RSS} = \textbf{y} - \textbf{w}\textbf{$\Theta$}_\textbf{x}$$.
+$$\textit{1. MLE coefficients:  } \textbf{w} = (\textbf{$\Phi$}_\textbf{x}^T\textbf{$\Phi$}_\textbf{x})^{-1}\textbf{$\Phi$}_\textbf{x}^T\textbf{y}$$
+$$\textit{2. MLE residuals:  } \textbf{RSS} = \textbf{y} - \textbf{w}\textbf{$\Phi$}_\textbf{x}$$.
 $$\textit{3. precision:  }  \beta = \left({\frac{\sum{\mathbf{RSS^2}}}{n-p}}\right)^{-1}$$
 
 Pretty straightforward, simply do the MLE fit, get the variance of the residuals using degrees of freedom of the regression model.
@@ -404,9 +427,7 @@ Where: n is the number of data points, k is the number of parameters and RSS are
 
 
 ####Bayes Factor
-Bayes factor applies a likelihood test comparing the total probability of 2 models. To compute the likelihood for a *blm* model fit I used a formula from Wikipedia (https://en.wikipedia.org/wiki/Bayesian_linear_regression).
-$$ p(y|m) = \frac{1}{(2*pi)^{\frac{n}{2}}} * \sqrt{\frac{det(S_{0})}{det(S_{n})}} * \frac{b_{0}^{a_{0}}}{b_{n}^{a_{n}}} * \frac{a_{n}}{a_{0}}$$
-
+Bayes factor applies a likelihood test comparing the total probability of 2 models. The equation for the likelihood for a *blm* model fit is given in the introduction. 
 
 ```{r}
  set.seed(1) 
