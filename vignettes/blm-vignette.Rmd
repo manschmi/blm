@@ -467,6 +467,14 @@ bayes_factor(mod1, mod2)
 ```
 Very strong support. See *?bayes.factor* for more information on how to interpret the value.  
 
+
+Anova F-test comparing the 2 models
+```{r}
+anova(mod1, mod2)
+```
+Strong support for mod1 over mod2.
+  
+  
   
 Compare less separated models
 
@@ -496,6 +504,11 @@ bayes_factor(mod1, mod2)
 No significant support for mod1 over mod2.
 
 
+Anova F-test comparing the 2 models
+```{r}
+anova(mod1, mod2)
+```
+Still strong support for mod1 over mod2.
   
 
 ## Some Examples that Illustrate the Behaviour of Bayesian Linear Models 
