@@ -167,12 +167,16 @@ w1 <- 2
 x <- seq(-100,100,10)
 b <- 0.001
 y <- w0 + w1*x + rnorm(length(x), mean=0, sd=sqrt(1/b) )
-blm(y~x, beta=b)
+mod_with_b <- blm(y~x, beta=b)
+mod_with_b
+precision(mod_with_b)
 ```
 
 Compared to test without providing precision (ie where it is estimated from the data):
 ```{r to be used in tests2c....}
-blm(y~x)
+mod_wout_b <- blm(y~x)
+mod_wout_b
+precision(mod_wout_b)
 ````
 
 The MAP and covariance values are very close although not exactly the same.
@@ -454,8 +458,16 @@ mod2 <- blm(y ~ x)
 bic(mod2)
 ```
 
-The BIC for the second, much less well-fitting modelis much higher and thus the BIC indicates a better fit for *mod1*.
- 
+The BIC for the second, much less well-fitting model is much higher and thus the BIC indicates a better fit for *mod1*. See *?bic* for more information on how to interpret the values.
+
+
+Bayes factor comparing the 2 models
+```{r}
+bayes_factor(mod1, mod2)
+```
+Very strong support. See *?bayes.factor* for more information on how to interpret the value.  
+
+  
 Compare less separated models
 
 
@@ -474,9 +486,17 @@ mod2 <- blm(y ~ x)
 bic(mod2)
 ```
 
-... still some positive support for complex mod1, but not very strong.
+... bic indicates still some positive support for complex mod1, but not very strong.
 
 
+Bayes factor comparing the 2 models
+```{r}
+bayes_factor(mod1, mod2)
+```
+No significant support for mod1 over mod2.
+
+
+  
 
 ## Some Examples that Illustrate the Behaviour of Bayesian Linear Models 
 
