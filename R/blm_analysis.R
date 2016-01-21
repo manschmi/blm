@@ -165,3 +165,89 @@ bic <- function(object, ...){
   
   n * log( deviance(object) / n ) + k * log(n)
 }
+
+
+
+#' F-Test
+#' 
+#' Anova F-test for comparison of the fits of 2 \code{blm} objects.
+#' 
+#' @param model1 first, more simple, \code{blm} model, nested in model2.#
+#' @param model2 second, more complex, \code{blm} object.
+#' @param ... other arguments (currently ignored).
+#' 
+#' @details Extracts relevant features and compute the F value and the p-value
+#'   for comparison 2 model fits.
+#'   
+#' @return Analysis of Variance Table as for \code{\link{anova.lm}}.
+#' 
+#' @examples
+#' set.seed(1) 
+#' x <- seq(-10,10,.1) 
+#' b <- 0.3
+#' 
+#' w0 <- 0.2 ; w1 <- 3 ; w2 <- 10
+#' 
+#' y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
+#' mod1 <- blm(y ~ x + sin(x))
+#' 
+#' \dontrun{
+#'   plot(mod1, xlim=c(-10,10)) 
+#' }
+#' 
+#' #another mod removing the sinus term, clearly less well fitting
+#' mod2 <- blm(y ~ x)
+#' 
+#' anova(mod1, mod2)
+#' 
+#' ##much less distinguished model
+#' b <- 0.003
+#' y <- rnorm(201, mean = w0 + w1 * x + w2 *sin(x), sd = sqrt(1/b)) 
+#' mod1 <- blm(y ~ x + sin(x))
+#' \dontrun{
+#'   plot(mod1, xlim=c(-10,10)) 
+#' }
+#' mod2 <- blm(y ~ x)
+#' anova(mod1, mod2) #... still very low p-value !?
+#'   
+#' @export 
+anova.blm <- function(model1, model2, ...){
+  dev1 <- deviance(model1)
+  dev2 <- deviance(model2)
+  df1 <- df.residual(model1)
+  df2 <- df.residual(model2)
+  F <- ( (dev2 - dev1)/(df2 - df1) ) / ( dev2/(df2+1) )
+  pF <- 1-pf(F, df1, df2, lower.tail=F)
+  
+  struct <- structure(data.frame(Res.Df = c(df1, df2),
+                 RSS = c(dev1, dev2),
+                 Df = c(NA, df2-df1),
+                 'Sum of Sq' = c(NA, dev2-dev1),
+                 F = c(NA, F),
+                 pF = c(NA, pF)),
+            class = c('anova.blm', 'anova', 'data.frame'))
+  
+  attr(struct, 'model1') <- mod1
+  attr(struct, 'model2') <- mod2
+  
+  struct
+}
+
+
+#' Print 
+#' 
+#' Print a anova.blm object
+#' 
+#' @param x a \code{\link{anova.blm}} object.
+#' @param ... other arguments (currently ignored).
+#' 
+#' @export
+print.anova.blm <- function(x, ...){
+  cat('Analysis of Variance Table:\n\n')
+  cat('Model1: ')
+  print(attr(x, 'model1')$call)
+  cat('Model2: ')
+  print(attr(x, 'model2')$call)
+  cat('\n')
+  print(t(x[,1:6]))
+}
