@@ -13,19 +13,19 @@ test_that(paste("Deviance of a blm fit can max be equal to lm fit using seed", s
 
 
 seed <- as.integer(1000 * rnorm(1))
-test_that(paste("1/sd of residuals close to precision of data using seed", seed), {
+test_that(paste("1/var of residuals close to precision of data using seed", seed), {
   w0 <- 0.3 ; w1 <- 1.1 ; b <- 0.1
   x <- rnorm(1000)
-  y <- rnorm(1000, w1 * x + w0, 1/b)
-  mod1000 <- blm(y~x, beta=b, data=data.frame(x=x, y=y))
+  y <- rnorm(1000, w1 * x + w0, 1/sqrt(b))
+  mod1000 <- blm(y~x, data=data.frame(x=x, y=y))
   
-  expect_equal(1/sd(resid(mod1000)), b, tolerance=.1)
+  expect_equal(1/var(resid(mod1000)), b, tolerance=.1)
   
 })
 
 
 seed <- as.integer(1000 * rnorm(1))
-test_that(paste("Distribution of a blm fit reflects the precision of the model using seed", seed), {
+test_that(paste("Covariance of coefficients of a blm fit reflects the precision of the model using seed", seed), {
   
   w0 <- 0.3 ; w1 <- 1.1 ; b <- 1.3
   x <- rnorm(100)
