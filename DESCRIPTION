@@ -1,7 +1,7 @@
 Package: blmr
 Type: Package
 Title: Bayesian Linear Regression
-Version: 0.2.0.9000
+Version: 0.2.1.9000
 Date: 2015-11-26
 Authors@R: person("Manfred", "Schmid",
   email = "ms@mbg.au.dk",
